@@ -10,8 +10,12 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.craigblackburn.foostats.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
+
+<FrameLayout
+    android:layout_centerHorizontal="true"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/com_facebook_fragment_container" />
+
+
 </RelativeLayout>
