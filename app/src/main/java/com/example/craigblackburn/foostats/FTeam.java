@@ -2,27 +2,31 @@ package com.example.craigblackburn.foostats;
 
 import android.content.Context;
 
-public class FTeam {
+public class FTeam extends FModels {
 
-    private static DBHelper helper;
-    private static FPlayer player1, player2;
+    private FPlayer player1, player2;
 
-    private String uuid;
-
-    public static void initialize(Context context) {
-        helper = DBHelper.getInstance(context);
-    }
+    private String uuid, teamName;
 
     public FTeam(){}
 
-    public FTeam(String id, FPlayer p1, FPlayer p2) {
+    public FTeam(String id, String name,FPlayer p1, FPlayer p2) {
         uuid = id;
+        teamName = name;
         player1 = p1;
         player2 = p2;
     }
 
     public String getId() {
         return this.uuid;
+    }
+
+    public String getTeamName() {
+        return this.teamName;
+    }
+
+    public void setTeamName(String name) {
+        this.teamName = name;
     }
 
     public FPlayer[] getPlayers() {
@@ -45,13 +49,15 @@ public class FTeam {
         player2 = player;
     }
 
-    public void setPlayers(FPlayer p1, FPlayer p2) {
-        setPlayerOne(p1);
-        setPlayerTwo(p2);
+    private boolean canSave() {
+        return (this.uuid != null && this.teamName != null && this.player1 != null && this.player2 != null);
     }
 
     public boolean save() {
-        return helper.insert(this) > 0;
+        if (canSave())
+            return helper.insert(this) > 0;
+        else
+            return false;
     }
 
 

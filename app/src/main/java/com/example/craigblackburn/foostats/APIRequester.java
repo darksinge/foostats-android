@@ -2,12 +2,15 @@ package com.example.craigblackburn.foostats;
 
 
 import android.app.Activity;
+import android.content.AsyncQueryHandler;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 
 import com.facebook.AccessToken;
+import com.google.gson.Gson;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -15,14 +18,30 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
 
 import javax.net.ssl.HttpsURLConnection;
 
+interface PlayerDelegate {
+    void onTaskComplete(ArrayList<FPlayer> list);
+}
+
+interface TeamDelegate {
+    void onTaskComplete(ArrayList<FTeam> list);
+}
+
+interface GameDelegate {
+    void onTaskComplete(ArrayList<FGame> list);
+}
 
 public class APIRequester extends Activity {
 
+    interface APITaskHelper {
+        void onAsyncTaskComplete(JSONObject json);
+    }
+
     private static String TAG = "API_REQUESTER";
-    private APIListener mListener;
+    private APITaskHelper mListener;
 
     private static String PLAYERS = "/player";
     private static String TEAMS = "/team";
@@ -33,7 +52,7 @@ public class APIRequester extends Activity {
 
     private APIRequester() {}
 
-    public APIRequester(APIListener listener) {
+    public APIRequester(APITaskHelper listener) {
         mListener = listener;
     }
 
@@ -87,7 +106,7 @@ public class APIRequester extends Activity {
                 System.out.println("END CALL");
                 try {
                     JSONObject json = new JSONObject(result);
-                    mListener.onTaskComplete(json);
+                    mListener.onAsyncTaskComplete(json);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -103,18 +122,65 @@ public class APIRequester extends Activity {
         return null;
     }
 
-    public boolean getPlayers() {
+    public static APIRequester getPlayers(final PlayerDelegate delegate) {
+
+        APIRequester requester = new APIRequester(new APITaskHelper() {
+            @Override
+            public void onAsyncTaskComplete(JSONObject json) {
+                Gson gson = new Gson();
+
+//            {
+//                "teams":[
+//                {
+//                    "uuid":"a0bb332d-6040-41dd-af76-0dcab3862a66",
+//                        "name":"TeamAwesome",
+//                        "createdAt":"2016-12-13T22:55:45.000Z",
+//                        "updatedAt":"2016-12-13T22:55:45.000Z"
+//                }
+//                ],
+//                "achievements":[
+//
+//                ],
+//                "uuid":"db71d47a-27cc-45a9-9085-92777436ad52",
+//                    "email":"cr.blackburn89@gmail.com",
+//                    "firstName":"Craig",
+//                    "lastName":"Blackburn",
+//                    "role":"admin",
+//                    "username":"Craig Blackburn",
+//                    "createdAt":"2016-12-08T21:50:57.000Z",
+//                    "updatedAt":"2016-12-13T21:24:21.000Z",
+//                    "name":"Craig Blackburn"
+//            }
+                ArrayList<FPlayer> list = new ArrayList<>();
+
+                try {
+                    JSONArray playersJson = json.getJSONArray("players");
+
+                    for (int i = 0; i < playersJson.length(); i++) {
+                        JSONObject obj = playersJson.getJSONObject(i);
+                        list.add(gson.fromJson(obj.toString(), FPlayer.class));
+                    }
+
+                    delegate.onTaskComplete(list);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+        requester.requestPlayers();
+        return requester;
+    }
+
+    public void requestPlayers() {
         try {
             getFoostatRequest(BASE_URL + PLAYERS);
-            return true;
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
     }
 
-    interface APIListener {
-        void onTaskComplete(JSONObject json);
-    }
+
 
 }

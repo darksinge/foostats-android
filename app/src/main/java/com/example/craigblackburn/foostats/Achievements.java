@@ -1,8 +1,25 @@
 package com.example.craigblackburn.foostats;
 
-/**
- * Created by craigblackburn on 12/13/16.
- */
+public class Achievements extends FModels {
+    private String uuid;
+    private String name;
+    public Achievements(){}
 
-public class Achievements {
+    public Achievements(String id, String name) {
+        this.uuid = id;
+        this.name = name;
+    }
+
+    public String getId() {
+        return this.uuid;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
 }

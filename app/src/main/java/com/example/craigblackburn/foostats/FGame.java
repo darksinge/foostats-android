@@ -1,6 +1,7 @@
 package com.example.craigblackburn.foostats;
 
 import java.util.Objects;
+import java.util.UUID;
 
 
 public class FGame extends FModels {
@@ -30,6 +31,10 @@ public class FGame extends FModels {
         this.bluePlayer2 = blueTeam.getPlayerTwo();
         this.redPlayer1 = redTeam.getPlayerOne();
         this.redPlayer2 = redTeam.getPlayerTwo();
+    }
+
+    public FGame newGame(FTeam blueTeam, FTeam redTeam) {
+        return new FGame(generateUuid(), blueTeam, redTeam);
     }
 
     public String getId() {
@@ -66,10 +71,6 @@ public class FGame extends FModels {
 
     public Integer getRedPlayerTwoScore() {
         return this.redTeamPlayer2Score;
-    }
-
-    public boolean save() {
-        return helper.insert(this) > 0;
     }
 
     public FTeam getWinningTeam() {
@@ -146,5 +147,16 @@ public class FGame extends FModels {
         }
     }
 
+    private boolean canSave() {
+        return (this.uuid != null && this.blueTeam != null && this.redTeam != null);
+    }
+
+    public boolean save() {
+        if (canSave()) {
+            return helper.insert(this) > 0;
+        } else {
+            return false;
+        }
+    }
 
 }

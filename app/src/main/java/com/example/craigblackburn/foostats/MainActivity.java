@@ -2,6 +2,7 @@ package com.example.craigblackburn.foostats;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -24,9 +25,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 
-public class MainActivity extends AppCompatActivity implements FacebookLoginManager.FacebookListener, APIRequester.APIListener {
+public class MainActivity extends AppCompatActivity implements FacebookLoginManager.FacebookListener {
 
     private final static String TAG = "MAIN_ACTIVITY";
 
@@ -37,7 +39,6 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
     private ProgressDialog progressDialog;
     private User mUser;
     private Button testButton;
-    private APIRequester apiDelegate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
 
         FModels.initialize(getApplicationContext());
 
-        apiDelegate = new APIRequester(this);
         dbHelper = new DBHelper(getApplicationContext());
         tv = (TextView) findViewById(R.id.text_view);
         facebookManager = FacebookLoginManager.newInstance(this);
@@ -69,7 +69,16 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
         testButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                apiDelegate.getPlayers();
+                APIRequester.getPlayers(new PlayerDelegate() {
+                    @Override
+                    public void onTaskComplete(ArrayList<FPlayer> list) {
+                        String message = "";
+                        for (FPlayer player : list) {
+                            message += player.toString() + "\n";
+                        }
+                        tv.setText(message);
+                    }
+                });
             }
         });
 
@@ -181,46 +190,4 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
         updateMenu();
     }
 
-    @Override
-    public void onTaskComplete(JSONObject json) {
-        Gson gson = new Gson();
-
-//            {
-//                "teams":[
-//                {
-//                    "uuid":"a0bb332d-6040-41dd-af76-0dcab3862a66",
-//                        "name":"TeamAwesome",
-//                        "createdAt":"2016-12-13T22:55:45.000Z",
-//                        "updatedAt":"2016-12-13T22:55:45.000Z"
-//                }
-//                ],
-//                "achievements":[
-//
-//                ],
-//                "uuid":"db71d47a-27cc-45a9-9085-92777436ad52",
-//                    "email":"cr.blackburn89@gmail.com",
-//                    "firstName":"Craig",
-//                    "lastName":"Blackburn",
-//                    "role":"admin",
-//                    "username":"Craig Blackburn",
-//                    "createdAt":"2016-12-08T21:50:57.000Z",
-//                    "updatedAt":"2016-12-13T21:24:21.000Z",
-//                    "name":"Craig Blackburn"
-//            }
-        try {
-            JSONArray playersJson = json.getJSONArray("players");
-
-            FPlayer[] players = new FPlayer[playersJson.length()];
-            for (int i = 0; i < playersJson.length(); i++) {
-                JSONObject obj = playersJson.getJSONObject(i);
-                players[i] = gson.fromJson(obj.toString(), FPlayer.class);
-            }
-
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-
-    }
 }

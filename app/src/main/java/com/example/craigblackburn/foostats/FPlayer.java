@@ -1,9 +1,5 @@
 package com.example.craigblackburn.foostats;
 
-
-import android.content.Context;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 //     Example response
@@ -122,10 +118,22 @@ public class FPlayer extends FModels {
         return teams;
     }
 
-    public boolean save() {
-        return helper.insert(this) > 0;
+    private boolean canSave() {
+        return this.uuid != null;
     }
 
+    public boolean save() {
+        if (canSave())
+            return helper.insert(this) > 0;
+        else
+            return false;
+    }
 
+    public String toString() {
+        return "ID: " + getId()
+                + "\nName: " + getName()
+                + "\nEmail: " + getEmail()
+                + "\nRole: " + getRole();
+    }
 
 }

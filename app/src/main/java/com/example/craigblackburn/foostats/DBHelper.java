@@ -53,6 +53,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private final static String TEAM_TABLE_NAME = "fteams";
     private final static String TEAM_COLUMN_ID = "uuid";
+    private final static String TEAM_COLUMN_NAME = "team_name";
     private final static String TEAM_COLUMN_PLAYER1 = "player1";
     private final static String TEAM_COLUMN_PLAYER2 = "player2";
     private final static String TEAM_COLUMN_HAS_GAMES = "games";
@@ -142,6 +143,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         String createTeamTableStatement = "CREATE TABLE IF NOT EXISTS " + TEAM_TABLE_NAME + "("
                 + TEAM_COLUMN_ID + " TEXT PRIMARY KEY, "
+                + TEAM_COLUMN_NAME + " TEXT, "
                 + "FOREIGN KEY(" + TEAM_COLUMN_PLAYER1 + ") REFERENCES " + PLAYER_TABLE_NAME + "(" + PLAYER_COLUMN_ID + ")"
                 + "FOREIGN KEY(" + TEAM_COLUMN_PLAYER2 + ") REFERENCES " + PLAYER_TABLE_NAME + "(" + PLAYER_COLUMN_ID + ")" + ");";
         db.execSQL(createTeamTableStatement);
@@ -264,10 +266,11 @@ public class DBHelper extends SQLiteOpenHelper {
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
             String id = cursor.getString(cursor.getColumnIndex(TEAM_COLUMN_ID));
+            String name = cursor.getString(cursor.getColumnIndex(TEAM_COLUMN_NAME));
             String player1Id = cursor.getString(cursor.getColumnIndex(TEAM_COLUMN_PLAYER1));
             String player2Id = cursor.getString(cursor.getColumnIndex(TEAM_COLUMN_PLAYER2));
 
-            list.add(new FTeam(id, findPlayerById(player1Id), findPlayerById(player2Id)));
+            list.add(new FTeam(id, name, findPlayerById(player1Id), findPlayerById(player2Id)));
             cursor.moveToNext();
         }
         cursor.close();
@@ -299,6 +302,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         ContentValues values = new ContentValues();
         values.put(TEAM_COLUMN_ID, team.getId());
+        values.put(TEAM_COLUMN_NAME, team.getTeamName());
         values.put(TEAM_COLUMN_PLAYER1, team.getPlayerOne().getId());
         values.put(TEAM_COLUMN_PLAYER2, team.getPlayerTwo().getId());
         return (int) database.insert(TEAM_TABLE_NAME, null, values);
@@ -307,6 +311,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public int update(FTeam team) {
         ContentValues values = new ContentValues();
         values.put(TEAM_COLUMN_ID, team.getId());
+        values.put(TEAM_COLUMN_NAME, team.getTeamName());
         values.put(TEAM_COLUMN_PLAYER1, team.getPlayerOne().getId());
         values.put(TEAM_COLUMN_PLAYER2, team.getPlayerTwo().getId());
         return database.update(TEAM_TABLE_NAME, values, TEAM_COLUMN_ID + "=?", new String[]{team.getId()});
