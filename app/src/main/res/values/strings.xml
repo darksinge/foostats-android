@@ -17,8 +17,14 @@
         completions."
     </string>
 
-    <string name="main_menu_text">Main Menu</string>
+    <string name="menu_new_game_text">Start New Game</string>
+    <string name="menu_view_stats_text">View Stats</string>
+    <string name="menu_settings_text">Settings</string>
     <string name="menu_help">Help</string>
     <string name="menu_logout_text">Logout</string>
     <string name="menu_login_text">Facebook Login</string>
+    <string name="login_tv_text">Login or Signup</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

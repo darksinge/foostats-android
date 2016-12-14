@@ -1,10 +1,15 @@
 package com.example.craigblackburn.foostats;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.UUID;
 
 
 public class FGame extends FModels {
+
+    interface GameDelegate {
+        void onTaskComplete(ArrayList<FGame> list);
+    }
 
     public static int BLUE_PLAYER_ONE = 0;
     public static int BLUE_PLAYER_TWO = 1;

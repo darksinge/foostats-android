@@ -77,16 +77,14 @@ public class FacebookLoginManager extends Activity {
                             String token = AccessToken.getCurrentAccessToken().getToken();
                             User user = new User(id, token, email);
 
-                            DBHelper helper = DBHelper.getInstance(null);
+                            boolean success = user.save();
 
-                            boolean insertSuccess = helper.insert(user);
-
-                            if (!insertSuccess) {
+                            if (!success) {
                                 Log.d(TAG, "Failed to insert new user into database. :(");
                             }
 
-                            mListener.facebookCallback(user, insertSuccess, "User inserted into database");
-                        } catch (JSONException | DBHelper.DBHelperException e) {
+                            mListener.facebookCallback(user, success, "User inserted into database");
+                        } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }

@@ -2,6 +2,7 @@ package com.example.craigblackburn.foostats;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.Nullable;
 
 import java.lang.reflect.Array;
@@ -9,6 +10,10 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 public class User extends FModels {
+
+    interface UserDelegate {
+        void onTaskComplete(ArrayList<User> list);
+    }
 
     private String facebookId;
     private String accessToken;
@@ -82,6 +87,14 @@ public class User extends FModels {
 
     public boolean save() {
         return helper.insert(this) > 1;
+    }
+
+    public void delete() {
+        helper.delete(this);
+    }
+
+    public void deleteAll() {
+        helper.deleteAllUsers();
     }
 
 }

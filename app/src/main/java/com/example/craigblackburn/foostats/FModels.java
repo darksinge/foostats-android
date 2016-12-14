@@ -14,8 +14,8 @@ public class FModels {
 
     protected static DBHelper helper;
 
-    public static void initialize(Context context) {
-        helper = DBHelper.getInstance(context);
+    public static void initialize(DBHelper h) {
+        helper = h;
     }
 
     public static void pushToServer() {

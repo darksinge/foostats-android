@@ -28,6 +28,10 @@ import java.util.ArrayList;
 
 public class FPlayer extends FModels {
 
+    interface PlayerDelegate {
+        void onTaskComplete(ArrayList<FPlayer> list);
+    }
+
     private String uuid, email, firstName, lastName, role, username;
     private ArrayList<FTeam> teams;
     private ArrayList<Achievements> achievements;
@@ -129,9 +133,16 @@ public class FPlayer extends FModels {
             return false;
     }
 
+    public static ArrayList<FPlayer> find() {
+        if (helper != null)
+            return helper.findPlayers();
+        else
+            return null;
+    }
+
     public String toString() {
-        return "ID: " + getId()
-                + "\nName: " + getName()
+        return "Name: " + getName()
+                + "\nID: " + getId()
                 + "\nEmail: " + getEmail()
                 + "\nRole: " + getRole();
     }

@@ -2,7 +2,13 @@ package com.example.craigblackburn.foostats;
 
 import android.content.Context;
 
+import java.util.ArrayList;
+
 public class FTeam extends FModels {
+
+    interface TeamDelegate {
+        void onTaskComplete(ArrayList<FTeam> list);
+    }
 
     private FPlayer player1, player2;
 

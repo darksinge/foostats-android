@@ -22,18 +22,6 @@ import java.util.ArrayList;
 
 import javax.net.ssl.HttpsURLConnection;
 
-interface PlayerDelegate {
-    void onTaskComplete(ArrayList<FPlayer> list);
-}
-
-interface TeamDelegate {
-    void onTaskComplete(ArrayList<FTeam> list);
-}
-
-interface GameDelegate {
-    void onTaskComplete(ArrayList<FGame> list);
-}
-
 public class APIRequester extends Activity {
 
     interface APITaskHelper {
@@ -122,35 +110,13 @@ public class APIRequester extends Activity {
         return null;
     }
 
-    public static APIRequester getPlayers(final PlayerDelegate delegate) {
+    public static void getPlayers(final FPlayer.PlayerDelegate delegate) {
 
-        APIRequester requester = new APIRequester(new APITaskHelper() {
+        new APIRequester(new APITaskHelper() {
             @Override
             public void onAsyncTaskComplete(JSONObject json) {
                 Gson gson = new Gson();
 
-//            {
-//                "teams":[
-//                {
-//                    "uuid":"a0bb332d-6040-41dd-af76-0dcab3862a66",
-//                        "name":"TeamAwesome",
-//                        "createdAt":"2016-12-13T22:55:45.000Z",
-//                        "updatedAt":"2016-12-13T22:55:45.000Z"
-//                }
-//                ],
-//                "achievements":[
-//
-//                ],
-//                "uuid":"db71d47a-27cc-45a9-9085-92777436ad52",
-//                    "email":"cr.blackburn89@gmail.com",
-//                    "firstName":"Craig",
-//                    "lastName":"Blackburn",
-//                    "role":"admin",
-//                    "username":"Craig Blackburn",
-//                    "createdAt":"2016-12-08T21:50:57.000Z",
-//                    "updatedAt":"2016-12-13T21:24:21.000Z",
-//                    "name":"Craig Blackburn"
-//            }
                 ArrayList<FPlayer> list = new ArrayList<>();
 
                 try {
@@ -168,9 +134,31 @@ public class APIRequester extends Activity {
                 }
 
             }
-        });
-        requester.requestPlayers();
-        return requester;
+        }).requestPlayers();
+    }
+
+    public static void getTeams(final FTeam.TeamDelegate delegate) {
+        new APIRequester(new APITaskHelper() {
+            @Override
+            public void onAsyncTaskComplete(JSONObject json) {
+                Gson gson = new Gson();
+
+                ArrayList<FTeam> list = new ArrayList<>();
+
+                try {
+                    JSONArray teamsJson = json.getJSONArray("teams");
+
+                    for (int i = 0; i < teamsJson.length(); i++) {
+                        JSONObject obj = teamsJson.getJSONObject(i);
+                        list.add(gson.fromJson(obj.toString(), FTeam.class));
+                    }
+                    delegate.onTaskComplete(list);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }).requestTeams();
     }
 
     public void requestPlayers() {
@@ -181,6 +169,13 @@ public class APIRequester extends Activity {
         }
     }
 
+    public void requestTeams() {
+        try {
+            getFoostatRequest(BASE_URL + TEAMS);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
 }

@@ -11,14 +11,12 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.craigblackburn.foostats.MainActivity">
 
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:visibility="gone"
+    <Button
+        android:id="@+id/test_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:indeterminateTintMode="src_atop"
-        android:indeterminateTint="@color/teal"
-        android:layout_gravity="center" />
+        android:layout_gravity="bottom"
+        android:text="Test Button" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -30,13 +28,9 @@
             android:layout_height="wrap_content" />
     </ScrollView>
 
-
-    <Button
-        android:id="@+id/test_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:text="Test Button" />
-
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/facebook_login_fragment_container" />
 
 </LinearLayout>

@@ -3,6 +3,7 @@ package com.example.craigblackburn.foostats;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -49,48 +50,48 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
         FacebookSdk.addLoggingBehavior(LoggingBehavior.REQUESTS);
         AppEventsLogger.activateApp(getApplication());
 
-        FModels.initialize(getApplicationContext());
-
         dbHelper = new DBHelper(getApplicationContext());
+        dbHelper.openDatabase();
+        FModels.initialize(dbHelper);
+
         tv = (TextView) findViewById(R.id.text_view);
         facebookManager = FacebookLoginManager.newInstance(this);
         testButton = (Button) findViewById(R.id.test_button);
 
-        dbHelper.forceUpgrade();
-
-        mUser = User.findOne();
-
-        if (mUser != null) {
-            tv.setText(mUser.getDisplayMessage());
-        } else {
-            tv.setText("User not found!");
-        }
+//        dbHelper.forceUpgrade();
 
         testButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                APIRequester.getPlayers(new PlayerDelegate() {
-                    @Override
-                    public void onTaskComplete(ArrayList<FPlayer> list) {
-                        String message = "";
-                        for (FPlayer player : list) {
-                            message += player.toString() + "\n";
-                        }
-                        tv.setText(message);
-                    }
-                });
+                User user = User.findOne();
+                if (user != null) {
+                    tv.setText(user.getDisplayMessage());
+                } else {
+                    tv.setText("Yup, you're really not logged in.");
+                }
             }
         });
 
     }
 
-    public void showProgressDialog() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateDisplay();
+    }
+
+    public void showProgressDialog(@Nullable String message) {
+
+        if (message == null || message.isEmpty()) {
+            message = "Loading...";
+        }
+
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(MainActivity.this);
             progressDialog.setIndeterminate(true);
             progressDialog.setCancelable(false);
         }
-        progressDialog.setMessage("Logging you in...");
+        progressDialog.setMessage(message);
         progressDialog.setCancelable(true);
         progressDialog.show();
     }
@@ -107,33 +108,46 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        updateDisplay();
         new MenuInflater(this).inflate(R.menu.menu, menu);
         mMenu = menu;
         return (super.onCreateOptionsMenu(menu));
     }
 
-    public void updateMenu() {
-        onPrepareOptionsMenu(mMenu);
+    public void updateDisplay() {
+        if (mMenu != null) {
+            onPrepareOptionsMenu(mMenu);
+        }
+
+        if (mUser == null) {
+            mUser = User.findOne();
+        }
+
+        if (mUser != null) {
+            tv.setText(mUser.getDisplayMessage());
+        } else {
+            tv.setText("You are not logged in.");
+        }
     }
 
-    public void login(MenuItem item) {
+    public void login() {
 
         User user = User.findOne();
         if (user == null && AccessToken.getCurrentAccessToken() != null) {
-            showProgressDialog();
+            showProgressDialog(null);
             facebookManager.makeGraphRequest();
         }
 
         facebookManager.login(this);
-        showProgressDialog();
-        updateMenu();
+        showProgressDialog(null);
+        updateDisplay();
     }
 
-    public void logout(MenuItem item) {
+    public void logout() {
         facebookManager.logout();
-        dbHelper.delete(mUser);
+        mUser.deleteAll();
         mUser = null;
-        updateMenu();
+        updateDisplay();
     }
 
     @Override
@@ -146,6 +160,8 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
 
         if (mUser != null) {
             tv.setText(mUser.getDisplayMessage());
+        } else {
+            tv.setText("You are not logged in.");
         }
 
         return super.onPrepareOptionsMenu(menu);
@@ -155,17 +171,20 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.main_menu:
+            case R.id.settings:
 
                 return true;
             case R.id.help:
 
                 return true;
             case R.id.login:
-                login(item);
+                login();
                 return true;
             case R.id.logout:
-                logout(item);
+                logout();
+                return true;
+            case R.id.stats:
+
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -187,7 +206,10 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
             tv.setText(info);
         }
 
-        updateMenu();
+        updateDisplay();
     }
 
+    public void login(View view) {
+        login();
+    }
 }
