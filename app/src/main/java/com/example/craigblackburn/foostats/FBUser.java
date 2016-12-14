@@ -1,44 +1,33 @@
 package com.example.craigblackburn.foostats;
 
-import org.greenrobot.greendao.annotation.Entity;
-import org.greenrobot.greendao.annotation.Id;
-import org.greenrobot.greendao.annotation.Index;
-import org.greenrobot.greendao.annotation.Property;
-import org.greenrobot.greendao.annotation.Generated;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Objects;
 
-@Entity
 public class FBUser {
 
-    @Id
-    @Index(unique = true)
-    private Long facebookId;
-    @Property(nameInDb = "access_token")
+    private String facebookId;
     private String accessToken;
-    @Property(nameInDb = "email")
     private String email;
 
     public FBUser() {}
 
     public FBUser(String id, String token, String email) {
-        this.facebookId = Long.valueOf(id);
+        this.facebookId = id;
         this.accessToken = token;
         this.email = email;
     }
 
-    @Generated(hash = 1276802293)
-    public FBUser(Long facebookId, String accessToken, String email) {
-        this.facebookId = facebookId;
-        this.accessToken = accessToken;
-        this.email = email;
-    }
-
-    public Long getId() {
+    public String getId() {
         return this.facebookId;
     }
 
     public String getFacebookId() {
-        return String.valueOf(facebookId);
+        return this.facebookId;
     }
 
     public String getAccessToken() {
@@ -50,7 +39,7 @@ public class FBUser {
     }
 
     public void setFacebookId(String id) {
-        this.facebookId = Long.valueOf(id);
+        this.facebookId = id;
     }
 
     public void setAccessToken(String token) {
@@ -67,8 +56,29 @@ public class FBUser {
                 + "\nFacebook ID: " + this.facebookId;
     }
 
-    public void setFacebookId(Long facebookId) {
-        this.facebookId = facebookId;
+    public String getDisplayMessage() {
+        return this.email + " is logged in";
+    }
+
+    public boolean equals(FBUser user) {
+        return Objects.equals(this, user);
+    }
+
+    public static FBUser findOne(){
+        try {
+            DBHelper helper = DBHelper.getInstance(null);
+            ArrayList<FBUser> users = helper.findUsers();
+
+            if (users.size() > 0) {
+                return users.get(0);
+            } else {
+                return null;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }

@@ -19,17 +19,9 @@ android {
     }
 }
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.greenrobot:greendao-gradle-plugin:3.2.1'
-    }
+repositories {
+    mavenCentral()
 }
-
-apply plugin: 'com.android.application'
-apply plugin: 'org.greenrobot.greendao'
 
 
 dependencies {
@@ -40,10 +32,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.0.1'
     compile 'com.facebook.android:facebook-android-sdk:[4,5)'
     compile 'com.android.support:design:25.0.1'
-    compile 'org.greenrobot:greendao:3.2.0'
+    compile 'com.google.code.gson:gson:2.4'
     testCompile 'junit:junit:4.12'
-}
-
-greendao {
-    schemaVersion 1
 }

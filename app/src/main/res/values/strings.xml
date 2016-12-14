@@ -17,5 +17,8 @@
         completions."
     </string>
 
-    <string name="facebook_access_token">null</string>
+    <string name="main_menu_text">Main Menu</string>
+    <string name="menu_help">Help</string>
+    <string name="menu_logout_text">Logout</string>
+    <string name="menu_login_text">Facebook Login</string>
 </resources>
