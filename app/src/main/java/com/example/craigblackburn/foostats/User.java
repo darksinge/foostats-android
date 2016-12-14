@@ -8,15 +8,15 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class FBUser {
+public class User extends FModels {
 
     private String facebookId;
     private String accessToken;
     private String email;
 
-    public FBUser() {}
+    public User() {}
 
-    public FBUser(String id, String token, String email) {
+    public User(String id, String token, String email) {
         this.facebookId = id;
         this.accessToken = token;
         this.email = email;
@@ -60,14 +60,13 @@ public class FBUser {
         return this.email + " is logged in";
     }
 
-    public boolean equals(FBUser user) {
+    public boolean equals(User user) {
         return Objects.equals(this, user);
     }
 
-    public static FBUser findOne(){
+    public static User findOne(){
         try {
-            DBHelper helper = DBHelper.getInstance(null);
-            ArrayList<FBUser> users = helper.findUsers();
+            ArrayList<User> users = helper.findUsers();
 
             if (users.size() > 0) {
                 return users.get(0);
@@ -79,6 +78,10 @@ public class FBUser {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public boolean save() {
+        return helper.insert(this) > 1;
     }
 
 }

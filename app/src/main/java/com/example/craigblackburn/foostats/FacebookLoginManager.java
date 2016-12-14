@@ -75,7 +75,7 @@ public class FacebookLoginManager extends Activity {
                             String email = object.getString("email");
                             String id = object.getString("id");
                             String token = AccessToken.getCurrentAccessToken().getToken();
-                            FBUser user = new FBUser(id, token, email);
+                            User user = new User(id, token, email);
 
                             DBHelper helper = DBHelper.getInstance(null);
 
@@ -112,7 +112,7 @@ public class FacebookLoginManager extends Activity {
     }
 
     interface FacebookListener {
-        void facebookCallback(FBUser user, boolean success, String info);
+        void facebookCallback(User user, boolean success, String info);
     }
 
 

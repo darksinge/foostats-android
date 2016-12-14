@@ -21,12 +21,6 @@ public class FTeam {
         player2 = p2;
     }
 
-    public FTeam(String id, String p1Id, String p2Id) {
-        uuid = id;
-        player1 = helper.findPlayerById(p1Id);
-        player2 = helper.findPlayerById(p2Id);
-    }
-
     public String getId() {
         return this.uuid;
     }
@@ -54,6 +48,10 @@ public class FTeam {
     public void setPlayers(FPlayer p1, FPlayer p2) {
         setPlayerOne(p1);
         setPlayerTwo(p2);
+    }
+
+    public boolean save() {
+        return helper.insert(this) > 0;
     }
 
 

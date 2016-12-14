@@ -16,4 +16,8 @@ public class FModels {
         helper = DBHelper.getInstance(context);
     }
 
+    public static void pushToServer() {
+        
+    }
+
 }

@@ -2,8 +2,10 @@
   <dictionary name="craigblackburn">
     <words>
       <w>craigblackburn</w>
+      <w>firstname</w>
       <w>foostat</w>
       <w>foostats</w>
+      <w>lastname</w>
     </words>
   </dictionary>
 </component>

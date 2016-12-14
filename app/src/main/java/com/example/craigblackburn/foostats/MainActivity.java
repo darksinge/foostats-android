@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
     private Menu mMenu;
     private TextView tv;
     private ProgressDialog progressDialog;
-    private FBUser mUser;
+    private User mUser;
     private Button testButton;
     private APIRequester apiDelegate;
 
@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
 
         dbHelper.forceUpgrade();
 
-        mUser = FBUser.findOne();
+        mUser = User.findOne();
 
         if (mUser != null) {
             tv.setText(mUser.getDisplayMessage());
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
     }
 
     private boolean userIsLoggedIn() {
-        return FBUser.findOne() != null;
+        return User.findOne() != null;
     }
 
     @Override
@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
 
     public void login(MenuItem item) {
 
-        FBUser user = FBUser.findOne();
+        User user = User.findOne();
         if (user == null && AccessToken.getCurrentAccessToken() != null) {
             showProgressDialog();
             facebookManager.makeGraphRequest();
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements FacebookLoginMana
     }
 
     @Override
-    public void facebookCallback(FBUser user, boolean success, String info) {
+    public void facebookCallback(User user, boolean success, String info) {
         dismissProgressDialog();
         if (success) {
             mUser = user;
