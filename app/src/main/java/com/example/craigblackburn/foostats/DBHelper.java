@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 import java.util.ArrayList;
@@ -20,8 +21,8 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     private static DBHelper instance;
-    private static Context mContext;
-    private SQLiteDatabase database;
+    private static Context context;
+    private SQLiteDatabase mDatabase;
 
     private final static String DATABASE_NAME = "foostats";
     private final static int DB_VERSION = 1;
@@ -69,43 +70,28 @@ public class DBHelper extends SQLiteOpenHelper {
     private final static String GAME_COLUMN_WINNING_TEAM_ID = "winning_team_id";
 
 
-    public DBHelper(Context context) {
+    public static DBHelper newInstance(Context c) {
+        DBHelper helper = new DBHelper(c);
+        instance = helper;
+        context = c;
+        helper.openDatabase();
+        return helper;
+    }
+
+    private DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DB_VERSION);
-        instance = this;
-        mContext = context;
     }
 
     public void openDatabase() {
-        if (database != null) {
-            database = getWritableDatabase();
-        } else if (mContext != null) {
-            DBHelper helper = DBHelper.getInstance(mContext);
-            database = helper.getWritableDatabase();
+        if (mDatabase == null) {
+            mDatabase  = DBHelper.getInstance(context).getWritableDatabase();
+        } else if (!mDatabase.isOpen()) {
+            mDatabase = getWritableDatabase();
         }
-    }
-
-    public void closeDatabase() {
-        if (database != null) {
-            database.close();
-        } else {
-            instance.close();
-        }
-
     }
 
     public SQLiteDatabase getDatabase() {
-        if (database != null)
-            return database;
-
-        if (mContext != null)
-            return DBHelper.getInstance(mContext).getWritableDatabase();
-
-        try {
-            return DBHelper.getInstance().getWritableDatabase();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        return mDatabase != null ? mDatabase : DBHelper.getInstance(context).getWritableDatabase();
     }
 
     public static synchronized DBHelper getInstance(@NonNull Context context) {
@@ -115,16 +101,14 @@ public class DBHelper extends SQLiteOpenHelper {
         }
 
         if (instance == null && context != null) {
-            instance = new DBHelper(mContext);
+            instance = new DBHelper(context);
         }
 
-        instance.openDatabase();
         return instance;
     }
 
     public static synchronized DBHelper getInstance() throws DBHelperException {
         if (instance != null) {
-            instance.openDatabase();
             return instance;
         } else {
             throw new DBHelperException("Instance of DBHelper has not been instantiated and context was not provided.");
@@ -219,7 +203,8 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public int insert(User user) {
-        Cursor cursor = database.rawQuery("SELECT * FROM " + USER_TABLE_NAME + " WHERE " + USER_COLUMN_ID + " = " + user.getFacebookId(), null);
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + USER_TABLE_NAME + " WHERE " + USER_COLUMN_ID + " = " + user.getFacebookId(), null);
 
         if (cursor.getCount() > 0) {
             cursor.close();
@@ -231,11 +216,12 @@ public class DBHelper extends SQLiteOpenHelper {
         contentValues.put(USER_COLUMN_ACCESS_TOKEN, user.getAccessToken());
         contentValues.put(USER_COLUMN_EMAIL, user.getEmail());
         cursor.close();
-        return (int) database.insert(USER_TABLE_NAME, null, contentValues);
+        return (int) db.insert(USER_TABLE_NAME, null, contentValues);
     }
 
     public User findUserById(String id) {
-        Cursor cursor = database.query(USER_TABLE_NAME, null, USER_COLUMN_ID + "=?", new String[]{id}, null, null, null, null);
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.query(USER_TABLE_NAME, null, USER_COLUMN_ID + "=?", new String[]{id}, null, null, null, null);
         ArrayList<User> list = parseUserResponse(cursor);
         if (list.size() > 0) {
             return list.get(0);
@@ -245,28 +231,32 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public ArrayList<User> findUsers() {
-        Cursor cursor = database.rawQuery("SELECT * FROM " + USER_TABLE_NAME, null);
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + USER_TABLE_NAME, null);
         return parseUserResponse(cursor);
     }
 
     public int update(User user) {
+        SQLiteDatabase db = getDatabase();
         ContentValues values = new ContentValues();
         values.put(USER_COLUMN_EMAIL, user.getEmail());
         values.put(USER_COLUMN_ACCESS_TOKEN, user.getAccessToken());
-        return database.update(USER_TABLE_NAME, values, USER_COLUMN_ID + "=?", new String[]{user.getFacebookId()});
+        return db.update(USER_TABLE_NAME, values, USER_COLUMN_ID + "=?", new String[]{user.getFacebookId()});
     }
 
     public int delete(User user) {
-        return database.delete(USER_TABLE_NAME, USER_COLUMN_ID + "=?", new String[] {user.getFacebookId()});
+        SQLiteDatabase db = getDatabase();
+        return db.delete(USER_TABLE_NAME, USER_COLUMN_ID + "=?", new String[] {user.getFacebookId()});
     }
 
     public int deleteAllUsers() {
+        SQLiteDatabase db = getDatabase();
         ArrayList<User> list = findUsers();
         String[] userIds = new String[list.size()];
         for (User user : list) {
             userIds[list.indexOf(user)] = user.getId();
         }
-        return database.delete(USER_TABLE_NAME, USER_COLUMN_ID + "=?", userIds);
+        return db.delete(USER_TABLE_NAME, USER_COLUMN_ID + "=?", userIds);
     }
 
     /**
@@ -292,12 +282,14 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public ArrayList<FTeam> findTeams() throws Exception {
-        Cursor cursor = database.rawQuery("SELECT * FROM " + TEAM_TABLE_NAME, null);
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TEAM_TABLE_NAME, null);
         return parseTeamResponse(cursor);
     }
 
     public FTeam findTeamById(String id) {
-        Cursor cursor = database.rawQuery("SELECT * FROM " + TEAM_TABLE_NAME + " WHERE " + TEAM_COLUMN_ID + "=" + id, null);
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TEAM_TABLE_NAME + " WHERE " + TEAM_COLUMN_ID + "=" + id, null);
         ArrayList<FTeam> list = parseTeamResponse(cursor);
         if (list.size() > 0) {
             return list.get(0);
@@ -307,7 +299,8 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public int insert(FTeam team) {
-        Cursor cursor = database.rawQuery("SELECT * FROM " + TEAM_TABLE_NAME + " WHERE " + TEAM_COLUMN_ID + "=" + team.getId(), null);
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TEAM_TABLE_NAME + " WHERE " + TEAM_COLUMN_ID + "=" + team.getId(), null);
 
         if (cursor.getCount() > 0) {
             cursor.close();
@@ -320,16 +313,17 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(TEAM_COLUMN_PLAYER1, team.getPlayerOne().getId());
         values.put(TEAM_COLUMN_PLAYER2, team.getPlayerTwo().getId());
         cursor.close();
-        return (int) database.insert(TEAM_TABLE_NAME, null, values);
+        return (int) db.insert(TEAM_TABLE_NAME, null, values);
     }
 
     public int update(FTeam team) {
+        SQLiteDatabase db = getDatabase();
         ContentValues values = new ContentValues();
         values.put(TEAM_COLUMN_ID, team.getId());
         values.put(TEAM_COLUMN_NAME, team.getTeamName());
         values.put(TEAM_COLUMN_PLAYER1, team.getPlayerOne().getId());
         values.put(TEAM_COLUMN_PLAYER2, team.getPlayerTwo().getId());
-        return database.update(TEAM_TABLE_NAME, values, TEAM_COLUMN_ID + "=?", new String[]{team.getId()});
+        return db.update(TEAM_TABLE_NAME, values, TEAM_COLUMN_ID + "=?", new String[]{team.getId()});
     }
 
     /**
@@ -361,7 +355,8 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public int insert(FPlayer player) {
-        Cursor cursor = database.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_ID + " = \"" + player.getId() + "\";", null );
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_ID + " = \"" + player.getId() + "\";", null );
 
         if (cursor.getCount() > 0) {
             cursor.close();
@@ -376,12 +371,11 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(PLAYER_COLUMN_USERNAME, player.getUsername());
         values.put(PLAYER_COLUMN_TEAMS, FPlayer.serializeTeams(player));
         cursor.close();
-        return (int) database.insert(PLAYER_TABLE_NAME, null, values);
+        return (int) db.insert(PLAYER_TABLE_NAME, null, values);
     }
 
     public FPlayer findPlayerById(String id) {
-        close();
-        SQLiteDatabase db = getWritableDatabase();
+        SQLiteDatabase db = getDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_ID + "=" + id, null);
         ArrayList<FPlayer> list = parsePlayerResponse(cursor);
         if (list.size() > 0) {
@@ -392,11 +386,13 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public ArrayList<FPlayer> findPlayers() {
-        Cursor cursor = database.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME, null);
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME, null);
         return parsePlayerResponse(cursor);
     }
 
     public int update(FPlayer player) {
+        SQLiteDatabase db = getDatabase();
         ContentValues values = new ContentValues();
         values.put(PLAYER_COLUMN_EMAIL, player.getEmail());
         values.put(PLAYER_COLUMN_FIRSTNAME, player.getFirstName());
@@ -406,7 +402,7 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(PLAYER_COLUMN_TEAMS, FPlayer.serializeTeams(player));
 //        values.put(PLAYER_COLUMN_ACHIEVEMENTS, FPlayer.serializeAchievements(player));
 
-        return database.update(PLAYER_TABLE_NAME, values, PLAYER_COLUMN_ID + "=?", new String[]{player.getId()});
+        return db.update(PLAYER_TABLE_NAME, values, PLAYER_COLUMN_ID + "=?", new String[]{player.getId()});
     }
 
     /**
@@ -455,7 +451,8 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public FGame findGameById(String id) {
-        Cursor cursor = database.rawQuery("SELECT * FROM " + GAME_TABLE_NAME + " WHERE " + GAME_COLUMN_ID + "=" + id, null);
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + GAME_TABLE_NAME + " WHERE " + GAME_COLUMN_ID + "=" + id, null);
         ArrayList<FGame> list = parseGameResponse(cursor);
         if (list.size() > 0) {
             return list.get(0);
@@ -465,13 +462,14 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public ArrayList<FGame> findGames() {
-        Cursor cursor = database.rawQuery("SELECT * FROM " + GAME_TABLE_NAME, null);
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + GAME_TABLE_NAME, null);
         return parseGameResponse(cursor);
     }
 
     public int insert(FGame game) {
-
-        Cursor cursor = database.rawQuery("SELECT * FROM " + GAME_TABLE_NAME + " WHERE " + GAME_COLUMN_ID + "=" + game.getId(), null);
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + GAME_TABLE_NAME + " WHERE " + GAME_COLUMN_ID + "=" + game.getId(), null);
 
         if (cursor.getCount() > 0) {
             cursor.close();
@@ -491,10 +489,11 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(GAME_COLUMN_RED_P2_SCORE, game.getRedPlayerTwoScore());
         values.put(GAME_COLUMN_WINNING_TEAM_ID, game.getWinningTeamId());
         cursor.close();
-        return (int) database.insert(GAME_TABLE_NAME, null, values);
+        return (int) db.insert(GAME_TABLE_NAME, null, values);
     }
 
     public int update(FGame game) {
+        SQLiteDatabase db = getDatabase();
         ContentValues values = new ContentValues();
         values.put(GAME_COLUMN_HAS_TEAMS, game.getId());
         values.put(GAME_COLUMN_BLUE_P1, game.getPlayer(FGame.BLUE_PLAYER_ONE).getId());
@@ -506,7 +505,7 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(GAME_COLUMN_RED_P1_SCORE, game.getRedPlayerOneScore());
         values.put(GAME_COLUMN_RED_P2_SCORE, game.getRedPlayerTwoScore());
         values.put(GAME_COLUMN_WINNING_TEAM_ID, game.getWinningTeamId());
-        return database.update(GAME_TABLE_NAME, values, GAME_COLUMN_ID + "=?", new String[]{game.getId()});
+        return db.update(GAME_TABLE_NAME, values, GAME_COLUMN_ID + "=?", new String[]{game.getId()});
     }
 
 }

@@ -3,6 +3,8 @@ package com.example.craigblackburn.foostats;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.lang.reflect.Array;
@@ -69,6 +71,21 @@ public class User extends FModels {
         return Objects.equals(this, user);
     }
 
+    public static String serialize(User user) {
+        return user.getId() + ";" + user.getAccessToken() + ";" + user.getEmail();
+    }
+
+    public static User deserialize(@NonNull String string) {
+        String[] components = string.split(";");
+        User user = new User();
+        if (components.length == 3) {
+            user.setFacebookId(components[0]);
+            user.setAccessToken(components[1]);
+            user.setEmail(components[2]);
+        }
+        return user;
+    }
+
     public static User findOne(){
         try {
             ArrayList<User> users = helper.findUsers();
@@ -85,8 +102,19 @@ public class User extends FModels {
         }
     }
 
-    public boolean save() {
-        return helper.insert(this) > 1;
+    private boolean canSave() {
+        return this.getId() != null && this.getEmail() != null && this.getAccessToken() != null;
+    }
+
+    public boolean save() throws SQLiteException {
+        if (helper != null) {
+            if (canSave()) {
+                return helper.insert(this) > 1;
+            } else {
+                throw new SQLiteException("Cannot save record - missing required fields!");
+            }
+        }
+        return false;
     }
 
     public void delete() {
