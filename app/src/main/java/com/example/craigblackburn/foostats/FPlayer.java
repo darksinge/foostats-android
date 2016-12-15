@@ -71,7 +71,15 @@ public class FPlayer extends FModel {
         return this.uuid;
     }
 
-    public String getFacebookId() { return this.facebookId; }
+    public String getFacebookId() {
+        if (this.facebookId != null)
+            return this.facebookId;
+        if (this.uuid != null) {
+            return this.uuid;
+        }
+        this.uuid = generateUuid();
+        return this.uuid;
+    }
 
     public String getEmail() {
         return this.email;
@@ -104,18 +112,37 @@ public class FPlayer extends FModel {
     }
 
     public static String serializePlayer(FPlayer player) {
-        Gson gson = new Gson();
-        return gson.toJson(player);
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("uuid", player.getId());
+            obj.put("facebookId", player.getFacebookId());
+            obj.put("email", player.getEmail());
+            obj.put("firstName", player.getFirstName());
+            obj.put("lastName", player.getLastName());
+            obj.put("role", player.getRole());
+            obj.put("username", player.getUsername());
+            return obj.toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     public static FPlayer deserializePlayer(String jsonString) {
         try {
-            JSONObject jsonObject = new JSONObject(jsonString);
+            JSONObject obj = new JSONObject(jsonString);
+            String id = obj.getString("uuid");
+            String facebookId = obj.getString("facebookId");
+            String email = obj.getString("email");
+            String firstname = obj.getString("firstName");
+            String lastname = obj.getString("lastName");
+            String role = obj.getString("role");
+            String username = obj.getString("username");
+            return new FPlayer(id, facebookId, email, firstname, lastname, role, username);
         } catch (JSONException e) {
             e.printStackTrace();
+            return null;
         }
-
-        return new FPlayer();
     }
 
     private boolean canSave() {

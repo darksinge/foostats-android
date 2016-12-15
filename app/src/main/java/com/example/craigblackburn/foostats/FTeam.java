@@ -112,29 +112,77 @@ public class FTeam extends FModel {
     }
 
     public static String serialize(FTeam team) {
-        Gson gson = new Gson();
-        return gson.toJson(team);
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("uuid", team.getId());
+            obj.put("teamName", team.getTeamName());
+            obj.put("player1", FPlayer.serializePlayer(team.getPlayerOne()));
+            obj.put("player2", FPlayer.serializePlayer(team.getPlayerTwo()));
+            return obj.toString();
+        } catch (JSONException e) {
+            // this should never get here!
+            e.printStackTrace();
+            return "";
+        }
     }
 
     public static JSONArray serialize(List<FTeam> teams) {
-        Gson gson = new Gson();
         JSONArray jsonArray = new JSONArray();
-        for (FTeam team : teams) {
-            String teamJson = gson.toJson(team);
-            try {
-                JSONObject obj = new JSONObject(teamJson);
+
+        try {
+            for (FTeam team : teams) {
+                JSONObject obj = new JSONObject();
+                obj.put("uuid", team.getId());
+                obj.put("teamName", team.getTeamName());
+                if (team.getPlayerOne() != null)
+                    obj.put("player1", FPlayer.serializePlayer(team.getPlayerOne()));
+                if (team.getPlayerTwo() != null)
+                    obj.put("player2", FPlayer.serializePlayer(team.getPlayerTwo()));
                 jsonArray.put(obj);
-            } catch (JSONException e) {
-                // this should never get here!
-                e.printStackTrace();
             }
+        } catch (JSONException e) {
+            // this should never get here!
+            e.printStackTrace();
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return  null;
         }
+
         return jsonArray;
+
     }
 
     public static FTeam deserialize(String jsonString) {
-        Gson gson = new Gson();
-        FTeam team = gson.fromJson(jsonString, FTeam.class);
+        FTeam team = null;
+        JSONObject obj = new JSONObject();
+        try {
+            String id = obj.getString("uuid");
+            String name = obj.getString("teamName");
+
+            team = new FTeam(id, name, null, null);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            String player1Serialized = obj.getString("player1");
+            team.setPlayerOne(FPlayer.deserializePlayer(player1Serialized));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            String player2Serialized = obj.getString("player2");
+            team.setPlayerTwo(FPlayer.deserializePlayer(player2Serialized));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return team;
     }
 
@@ -142,10 +190,9 @@ public class FTeam extends FModel {
         List<FTeam> teams = new ArrayList<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             try {
-                JSONObject obj = jsonArray.getJSONObject(i);
-                Gson gson = new Gson();
-                FTeam team = gson.fromJson(obj.toString(), FTeam.class);
-                teams.add(team);
+                FTeam team = FTeam.deserialize(jsonArray.get(i).toString());
+                if (team != null)
+                    teams.add(team);
             } catch (JSONException e) {
                 // this should also never get here!
                 e.printStackTrace();

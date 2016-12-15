@@ -413,7 +413,9 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(PLAYER_COLUMN_LASTNAME, player.getLastName());
         values.put(PLAYER_COLUMN_ROLE, player.getRole());
         values.put(PLAYER_COLUMN_USERNAME, player.getUsername());
-        values.put(PLAYER_COLUMN_TEAMS, FTeam.serialize(player.getTeams()).toString());
+        JSONArray jsonArray = FTeam.serialize(player.getTeams());
+        if (jsonArray != null)
+            values.put(PLAYER_COLUMN_TEAMS, jsonArray.toString());
 
         int dbCode;
         try {
