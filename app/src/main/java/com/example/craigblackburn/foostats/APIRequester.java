@@ -203,6 +203,7 @@ public class APIRequester extends Activity {
                     for (int i = 0; i < playersJson.length(); i++) {
                         JSONObject obj = playersJson.getJSONObject(i);
                         String id = obj.getString("uuid");
+                        String facebookId = obj.getString("facebookId");
                         String email = obj.getString("email");
                         String firstName = obj.getString("firstName");
                         String lastName = obj.getString("lastName");
@@ -218,8 +219,17 @@ public class APIRequester extends Activity {
                             teams.add(new FTeam(teamId, teamName, null, null));
                         }
 
-                        FPlayer player = new FPlayer(id, null, email, firstName, lastName, role, username, teams);
+                        FPlayer player = new FPlayer(id, facebookId, email, firstName, lastName, role, username, teams);
                         for (FTeam team : teams) {
+                            try {
+                                FTeam _existingTeam = FTeam.find(team.getTeamName());
+                                if (_existingTeam != null) {
+                                    _existingTeam.addPlayer(player);
+                                }
+                            } catch (Exception e) {
+                                // ignore
+                            }
+
                             team.addPlayer(player);
                         }
 
@@ -251,8 +261,24 @@ public class APIRequester extends Activity {
                         JSONObject player1Json = players.getJSONObject(0);
                         JSONObject player2Json = players.getJSONObject(1);
 
-                        FPlayer player1 = gson.fromJson(player1Json.toString(), FPlayer.class);
-                        FPlayer player2 = gson.fromJson(player2Json.toString(), FPlayer.class);
+                        FPlayer player1 = parsePlayerFromJSONObject(player1Json);
+                        FPlayer player2 = parsePlayerFromJSONObject(player2Json);
+
+                        FPlayer _player1 = FPlayer.find(player1.getId());
+                        FPlayer _player2 = FPlayer.find(player2.getId());
+
+                        if (_player1 != null) {
+                            player1 = _player1;
+                        }
+
+                        if (_player2 != null) {
+                            player2 = _player2;
+                        }
+
+                        FTeam team = new FTeam(id, name, player1, player2);
+
+                        team.getPlayerOne().addTeam(team);
+                        team.getPlayerTwo().addTeam(team);
 
                         list.add(new FTeam(id, name, player1, player2));
                     }
@@ -262,6 +288,22 @@ public class APIRequester extends Activity {
                 delegate.onTeamResponse(list);
             }
         }).requestTeams();
+    }
+
+    private static FPlayer parsePlayerFromJSONObject(JSONObject obj) {
+        try {
+            String id = obj.getString("uuid");
+            String facebookId = obj.getString("facebookId");
+            String email = obj.getString("email");
+            String firstName = obj.getString("firstName");
+            String lastName = obj.getString("lastName");
+            String role = obj.getString("role");
+            String username = obj.getString("username");
+            return new FPlayer(id, facebookId, email, firstName, lastName, role, username);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static void deleteTeam(String id, final OnAPITaskCompleteListener delegate) {

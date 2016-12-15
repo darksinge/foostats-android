@@ -2,6 +2,7 @@ package com.example.craigblackburn.foostats;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -58,6 +59,8 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
         redTeam = new FTeam();
         randomPlayers = new ArrayList<>();
 
+        startGameButton.setEnabled(false);
+
         isRandomTeams = switch1.isChecked();
         switch1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,6 +68,7 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                 if (view instanceof Switch) {
                     isRandomTeams = ((Switch) view).isChecked();
                     resetTeams();
+                    startGameButton.setEnabled(false);
                     blueTeam.setPlayerOne(null);
                     blueTeam.setPlayerTwo(null);
                     redTeam.setPlayerOne(null);
@@ -228,11 +232,13 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                         bluePlayerTwoLabel.setText("not selected");
                     }
                 }
-                if (blueTeam.playerCount() == 2) {
+                if (blueTeam.playerCount() == 2 && playerListFragment != null) {
+                    Snackbar.make(findViewById(android.R.id.content), "Blue Team Selected", Snackbar.LENGTH_LONG)
+                            .show();
                     playerListFragment.setListFragmentCheckBoxEnabled(false);
-//                    getSupportFragmentManager().beginTransaction()
-//                            .remove(playerListFragment)
-//                            .commit();
+                    getSupportFragmentManager().beginTransaction()
+                            .remove(playerListFragment)
+                            .commit();
                 }
                 break;
             case RED_TEAM:
@@ -251,8 +257,13 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                         redPlayerTwoLabel.setText("not selected");
                     }
                 }
-                if (redTeam.playerCount() == 2) {
+                if (redTeam.playerCount() == 2 && playerListFragment != null) {
+                    Snackbar.make(findViewById(android.R.id.content), "Red Team Selected", Snackbar.LENGTH_LONG)
+                            .show();
                     playerListFragment.setListFragmentCheckBoxEnabled(false);
+                    getSupportFragmentManager().beginTransaction()
+                            .remove(playerListFragment)
+                            .commit();
                 }
                 break;
             case RANDOM_TEAMS:
@@ -262,9 +273,20 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                     randomPlayers.remove(player);
                 }
                 if (randomPlayers.size() == 4) {
+                    Snackbar.make(findViewById(android.R.id.content), "Selected Players", Snackbar.LENGTH_LONG)
+                            .show();
                     playerListFragment.setListFragmentCheckBoxEnabled(false);
+                    getSupportFragmentManager().beginTransaction()
+                            .remove(playerListFragment)
+                            .commit();
                 }
                 break;
+        }
+
+        if (blueTeam.playerCount() == 2 && redTeam.playerCount() == 2) {
+            startGameButton.setEnabled(true);
+        } else if (randomPlayers.size() == 4) {
+            startGameButton.setEnabled(true);
         }
 
         if (didSelect && !mPlayers.contains(player)) {

@@ -11,7 +11,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class DBHelper extends SQLiteOpenHelper {
@@ -377,12 +381,16 @@ public class DBHelper extends SQLiteOpenHelper {
             String lastname = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_LASTNAME));
             String role = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_ROLE));
             String username = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_USERNAME));
-            String flatTeams = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_TEAMS));
+            String teamsJsonString = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_TEAMS));
 
-            ArrayList<FTeam> teams = FPlayer.deserializeTeams(flatTeams);
-
+            List<FTeam> teams = new ArrayList<>();
+            try {
+                JSONArray jsonArray = new JSONArray(teamsJsonString);
+                teams = FTeam.deserialize(jsonArray);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             list.add(new FPlayer(id, facebookId, email, firstname, lastname, role, username, teams));
-
             cursor.moveToNext();
         }
         cursor.close();
@@ -398,21 +406,19 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(PLAYER_COLUMN_EMAIL, player.getEmail());
+        values.put(PLAYER_COLUMN_ID, player.getId());
         values.put(PLAYER_COLUMN_FB_ID, player.getFacebookId());
+        values.put(PLAYER_COLUMN_EMAIL, player.getEmail());
         values.put(PLAYER_COLUMN_FIRSTNAME, player.getFirstName());
         values.put(PLAYER_COLUMN_LASTNAME, player.getLastName());
         values.put(PLAYER_COLUMN_ROLE, player.getRole());
         values.put(PLAYER_COLUMN_USERNAME, player.getUsername());
-        values.put(PLAYER_COLUMN_TEAMS, FPlayer.serializeTeams(player));
+        values.put(PLAYER_COLUMN_TEAMS, FTeam.serialize(player.getTeams()).toString());
 
         int dbCode;
         try {
             dbCode = (int) db.insertOrThrow(PLAYER_TABLE_NAME, null, values);
         }catch (SQLiteConstraintException e) {
-            Log.d(TAG, e.getLocalizedMessage());
-            dbCode = -1;
-        } catch (RuntimeException e) {
             Log.d(TAG, e.getLocalizedMessage());
             dbCode = -1;
         } catch (Exception e) {
@@ -470,7 +476,7 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(PLAYER_COLUMN_LASTNAME, player.getLastName());
         values.put(PLAYER_COLUMN_ROLE, player.getRole());
         values.put(PLAYER_COLUMN_USERNAME, player.getUsername());
-        values.put(PLAYER_COLUMN_TEAMS, FPlayer.serializeTeams(player));
+        values.put(PLAYER_COLUMN_TEAMS, FTeam.serialize(player.getTeams()).toString());
 //        values.put(PLAYER_COLUMN_ACHIEVEMENTS, FPlayer.serializeAchievements(player));
 
         return db.update(PLAYER_TABLE_NAME, values, PLAYER_COLUMN_ID + "=?", new String[]{player.getId()});

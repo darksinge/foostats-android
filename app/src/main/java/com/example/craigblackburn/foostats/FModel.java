@@ -57,7 +57,7 @@ public class FModel implements APIRequester.OnAPITaskCompleteListener {
             }
         }
         if (mListener != null) {
-            mListener.onTaskComplete(isSuccess, numRecordsInserted, MainActivity.PLAYER_REQUEST_FLAG);
+            mListener.onModelUpdateTaskComplete(isSuccess, numRecordsInserted, MainActivity.PLAYER_REQUEST_FLAG);
         }
     }
 
@@ -77,7 +77,7 @@ public class FModel implements APIRequester.OnAPITaskCompleteListener {
             }
         }
         if (mListener != null) {
-            mListener.onTaskComplete(isSuccess, numRecordsInserted, MainActivity.TEAM_REQUEST_FLAG);
+            mListener.onModelUpdateTaskComplete(isSuccess, numRecordsInserted, MainActivity.TEAM_REQUEST_FLAG);
         }
     }
 
@@ -103,7 +103,7 @@ public class FModel implements APIRequester.OnAPITaskCompleteListener {
             }
         }
         if (mListener != null) {
-            mListener.onTaskComplete(isSuccess, numRecordsInserted, MainActivity.GAME_REQUEST_FLAG);
+            mListener.onModelUpdateTaskComplete(isSuccess, numRecordsInserted, MainActivity.GAME_REQUEST_FLAG);
         }
     }
 
@@ -123,13 +123,13 @@ public class FModel implements APIRequester.OnAPITaskCompleteListener {
             }
         }
         if (mListener != null) {
-            mListener.onTaskComplete(isSuccess, numRecordsInserted, MainActivity.ACHIEVEMENT_REQUEST_FLAG);
+            mListener.onModelUpdateTaskComplete(isSuccess, numRecordsInserted, MainActivity.ACHIEVEMENT_REQUEST_FLAG);
         }
     }
 
 
     interface ModelListener {
-        void onTaskComplete(boolean isSuccess, int numRecordsInserted, String requestFlag);
+        void onModelUpdateTaskComplete(boolean isSuccess, int numRecordsInserted, String requestFlag);
     }
 
 }

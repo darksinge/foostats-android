@@ -84,10 +84,12 @@ public class LoginActivity extends AppCompatActivity {
         AppEventsLogger.activateApp(getApplication());
         setContentView(R.layout.activity_login);
 
-//        DBHelper dbHelper = DBHelper.newInstance(getApplicationContext());
-//        dbHelper.openDatabase();
-//        FModel.initialize(dbHelper);
-//        dbHelper.forceUpgrade();
+        /**************************** DB Upgrade ******************************/
+        /************* (Uncomment methods for development only) ***************/
+//        dropTables();
+//        dropGameDataOnly();
+        /**********************************************************************/
+        /**********************************************************************/
 
         callbackManager = CallbackManager.Factory.create();
 
@@ -122,6 +124,20 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         attemptLogin();
+    }
+
+    private void dropTables() {
+        DBHelper dbHelper = DBHelper.newInstance(getApplicationContext());
+        dbHelper.openDatabase();
+        FModel.initialize(dbHelper);
+        dbHelper.forceUpgrade();
+    }
+
+    private void dropGameDataOnly() {
+        DBHelper dbHelper = DBHelper.newInstance(getApplicationContext());
+        dbHelper.openDatabase();
+        FModel.initialize(dbHelper);
+        dbHelper.forceUpgradeGameData();
     }
 
     public synchronized void attemptLogin() {

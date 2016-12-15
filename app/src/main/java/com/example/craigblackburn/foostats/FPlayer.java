@@ -1,5 +1,10 @@
 package com.example.craigblackburn.foostats;
 
+import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +55,16 @@ public class FPlayer extends FModel {
         this.teams = teams;
     }
 
+    public FPlayer(String id, String facebookId, String email, String firstname, String lastname, String role, String username) {
+        this.uuid = id;
+        this.facebookId = facebookId;
+        this.email = email;
+        this.firstName = firstname;
+        this.lastName = lastname;
+        this.role = role;
+        this.username = username;
+        this.teams = new ArrayList<>();
+    }
 
     public void setId(String id) { this.uuid = id; }
     public String getId() {
@@ -88,42 +103,19 @@ public class FPlayer extends FModel {
         return this.achievements;
     }
 
-    public static String serializeTeams(FPlayer player) {
-        String flatten = "";
-        List<FTeam> teams = player.getTeams();
-        for(FTeam team : teams) {
-            flatten += team.getId() + ",";
-        }
-
-        if (flatten.endsWith(",")) {
-            return flatten.substring(0, flatten.length() - 1);
-        } else {
-            return flatten;
-        }
+    public static String serializePlayer(FPlayer player) {
+        Gson gson = new Gson();
+        return gson.toJson(player);
     }
 
-    public static ArrayList<FTeam> deserializeTeams(String rawValue) {
-        ArrayList<FTeam> teams = new ArrayList<>();
-        ArrayList<String> teamIds = new ArrayList<>();
-        String tempId = "";
-        char[] array = rawValue.toCharArray();
-        for (char character : array) {
-            if (character != ',') {
-                tempId += character;
-            } else {
-                teamIds.add(tempId);
-                tempId = "";
-            }
+    public static FPlayer deserializePlayer(String jsonString) {
+        try {
+            JSONObject jsonObject = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
-        for (String id : teamIds) {
-            FTeam team = helper.findTeamById(id);
-            if (team != null) {
-                teams.add(team);
-            }
-        }
-
-        return teams;
+        return new FPlayer();
     }
 
     private boolean canSave() {
@@ -154,6 +146,13 @@ public class FPlayer extends FModel {
                 + "\nID: " + getId()
                 + "\nEmail: " + getEmail()
                 + "\nRole: " + getRole();
+    }
+
+    public void addTeam(FTeam team) {
+        List<FTeam> list = getTeams();
+        if (!list.contains(team)) {
+            teams.add(team);
+        }
     }
 
 }

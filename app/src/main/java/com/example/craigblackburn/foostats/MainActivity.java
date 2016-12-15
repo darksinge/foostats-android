@@ -76,6 +76,17 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
             Log.d(TAG, "Team Count: " + teamList.size());
             Log.d(TAG, "User Count: " + userList.size());
 
+            for(FPlayer player : playerList) {
+                Log.d(TAG, player.getFirstName() + " uuid: " + player.getId());
+            }
+
+            FTeam team = teamList.get(0);
+            Log.d(TAG, "Team before serialized:\n" + team.getDescription());
+            String teamJson = FTeam.serialize(team);
+            Log.d(TAG, "Serialized Team: " + teamJson);
+            FTeam deserializedTeam = FTeam.deserialize(teamJson);
+            Log.d(TAG, "Team Deserialized:\n" + deserializedTeam.getDescription());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -172,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
     private boolean didRequestAchievements = false;
 
     @Override
-    public void onTaskComplete(boolean isSuccess, int numRecordsInserted, String requestFlag) {
+    public void onModelUpdateTaskComplete(boolean isSuccess, int numRecordsInserted, String requestFlag) {
         switch (requestFlag) {
             case PLAYER_REQUEST_FLAG:
                 didRequestPlayers = true;
@@ -196,5 +207,6 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
             didRequestGames = false;
             didRequestAchievements = false;
         }
+        Log.d(TAG, "Server Query Successful: " + String.valueOf(isSuccess) + "\nRecords inserted: " + numRecordsInserted + "\nRequest Flag: " + requestFlag);
     }
 }
