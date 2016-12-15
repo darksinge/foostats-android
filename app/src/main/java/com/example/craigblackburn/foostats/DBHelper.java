@@ -52,6 +52,7 @@ public class DBHelper extends SQLiteOpenHelper {
     private final static String PLAYER_COLUMN_NAME = "name";
     private final static String PLAYER_COLUMN_TEAMS = "teams";
     private final static String PLAYER_COLUMN_ACHIEVEMENTS = "achievements";
+    private final static String PLAYER_COLUMN_WINS = "numWins";
 
     private final static String TEAM_TABLE_NAME = "fteams";
     private final static String TEAM_COLUMN_ID = "uuid";
@@ -143,7 +144,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         String createPlayerTableStatement = "CREATE TABLE IF NOT EXISTS " + PLAYER_TABLE_NAME + "("
                 + PLAYER_COLUMN_ID + " TEXT PRIMARY KEY UNIQUE, "
-                + PLAYER_COLUMN_FB_ID + " TEXT UNIQUE, "
+                + PLAYER_COLUMN_FB_ID + " TEXT, "
                 + PLAYER_COLUMN_EMAIL + " TEXT UNIQUE, "
                 + PLAYER_COLUMN_FIRSTNAME + " TEXT, "
                 + PLAYER_COLUMN_LASTNAME + " TEXT, "
@@ -151,6 +152,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 + PLAYER_COLUMN_USERNAME + " TEXT UNIQUE, "
                 + PLAYER_COLUMN_NAME + " TEXT, "
                 + PLAYER_COLUMN_TEAMS + " TEXT, "
+                + PLAYER_COLUMN_WINS + " INTEGER, "
                 + PLAYER_COLUMN_ACHIEVEMENTS + " TEXT" + ");";
         db.execSQL(createPlayerTableStatement);
 
@@ -373,6 +375,7 @@ public class DBHelper extends SQLiteOpenHelper {
     private ArrayList<FPlayer> parsePlayerResponse(Cursor cursor) {
         ArrayList<FPlayer> list = new ArrayList<>();
         cursor.moveToFirst();
+        int recordCount = cursor.getCount();
         while (!cursor.isAfterLast()) {
             String id = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_ID));
             String facebookId = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_FB_ID));
@@ -382,6 +385,7 @@ public class DBHelper extends SQLiteOpenHelper {
             String role = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_ROLE));
             String username = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_USERNAME));
             String teamsJsonString = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_TEAMS));
+            int numWins = cursor.getInt(cursor.getColumnIndex(PLAYER_COLUMN_WINS));
 
             List<FTeam> teams = new ArrayList<>();
             try {
@@ -390,7 +394,9 @@ public class DBHelper extends SQLiteOpenHelper {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            list.add(new FPlayer(id, facebookId, email, firstname, lastname, role, username, teams));
+            FPlayer player = new FPlayer(id, facebookId, email, firstname, lastname, role, username, teams);
+            player.setNumWins(numWins);
+            list.add(player);
             cursor.moveToNext();
         }
         cursor.close();
@@ -413,11 +419,12 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(PLAYER_COLUMN_LASTNAME, player.getLastName());
         values.put(PLAYER_COLUMN_ROLE, player.getRole());
         values.put(PLAYER_COLUMN_USERNAME, player.getUsername());
+        values.put(PLAYER_COLUMN_WINS, player.getWins());
         JSONArray jsonArray = FTeam.serialize(player.getTeams());
         if (jsonArray != null)
             values.put(PLAYER_COLUMN_TEAMS, jsonArray.toString());
 
-        int dbCode;
+        int dbCode = 0;
         try {
             dbCode = (int) db.insertOrThrow(PLAYER_TABLE_NAME, null, values);
         }catch (SQLiteConstraintException e) {
@@ -427,6 +434,7 @@ public class DBHelper extends SQLiteOpenHelper {
             Log.d(TAG, e.getLocalizedMessage());
             dbCode = -1;
         }
+        Log.d(TAG, "DB INSERT CODE: " + String.valueOf(dbCode));
         return dbCode;
     }
 
@@ -465,19 +473,21 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public ArrayList<FPlayer> findPlayers() {
         SQLiteDatabase db = getDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME, null);
+        Cursor cursor = db.query(PLAYER_TABLE_NAME, null, null, null, null, null, null);
         return parsePlayerResponse(cursor);
     }
 
     public int update(FPlayer player) {
         SQLiteDatabase db = getDatabase();
         ContentValues values = new ContentValues();
+        values.put(PLAYER_COLUMN_ID, player.getId());
         values.put(PLAYER_COLUMN_EMAIL, player.getEmail());
         values.put(PLAYER_COLUMN_FB_ID, player.getFacebookId());
         values.put(PLAYER_COLUMN_FIRSTNAME, player.getFirstName());
         values.put(PLAYER_COLUMN_LASTNAME, player.getLastName());
         values.put(PLAYER_COLUMN_ROLE, player.getRole());
         values.put(PLAYER_COLUMN_USERNAME, player.getUsername());
+        values.put(PLAYER_COLUMN_WINS, player.getWins());
         values.put(PLAYER_COLUMN_TEAMS, FTeam.serialize(player.getTeams()).toString());
 //        values.put(PLAYER_COLUMN_ACHIEVEMENTS, FPlayer.serializeAchievements(player));
 
@@ -555,7 +565,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         ContentValues values = new ContentValues();
         values.put(GAME_COLUMN_ID, game.getId());
-        values.put(GAME_COLUMN_HAS_TEAMS, game.getId());
+//        values.put(GAME_COLUMN_HAS_TEAMS, game.getId());
         values.put(GAME_COLUMN_BLUE_P1, game.getPlayer(FGame.BLUE_PLAYER_ONE).getId());
         values.put(GAME_COLUMN_BLUE_P2, game.getPlayer(FGame.BLUE_PLAYER_TWO).getId());
         values.put(GAME_COLUMN_RED_P1, game.getPlayer(FGame.RED_PLAYER_ONE).getId());
@@ -571,7 +581,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public int update(FGame game) {
         SQLiteDatabase db = getDatabase();
         ContentValues values = new ContentValues();
-        values.put(GAME_COLUMN_HAS_TEAMS, game.getId());
+//        values.put(GAME_COLUMN_HAS_TEAMS, game.getId());
         values.put(GAME_COLUMN_BLUE_P1, game.getPlayer(FGame.BLUE_PLAYER_ONE).getId());
         values.put(GAME_COLUMN_BLUE_P2, game.getPlayer(FGame.BLUE_PLAYER_TWO).getId());
         values.put(GAME_COLUMN_RED_P1, game.getPlayer(FGame.RED_PLAYER_ONE).getId());

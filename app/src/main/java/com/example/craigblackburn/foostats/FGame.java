@@ -23,6 +23,20 @@ public class FGame extends FModel {
 
     public FGame(){}
 
+    public FGame(FTeam blueTeam, FTeam redTeam) {
+        this.uuid = generateUuid();
+        this.blueTeam = blueTeam;
+        this.redTeam = redTeam;
+        this.blueTeamPlayer1Score = 0;
+        this.blueTeamPlayer2Score = 0;
+        this.redTeamPlayer1Score = 0;
+        this.redTeamPlayer2Score = 0;
+        this.bluePlayer1 = blueTeam.getPlayerOne();
+        this.bluePlayer2 = blueTeam.getPlayerTwo();
+        this.redPlayer1 = redTeam.getPlayerOne();
+        this.redPlayer2 = redTeam.getPlayerTwo();
+    }
+
     public FGame(String id, FTeam blueTeam, FTeam redTeam) {
         this.uuid = id;
         this.blueTeam = blueTeam;
@@ -151,13 +165,32 @@ public class FGame extends FModel {
         }
     }
 
+    public void subtractPoint(int playerPosition) {
+        switch (playerPosition) {
+            case 0:
+                blueTeamPlayer1Score--;
+                break;
+            case 1:
+                blueTeamPlayer2Score--;
+                break;
+            case 2:
+                redTeamPlayer1Score--;
+                break;
+            case 3:
+                redTeamPlayer2Score--;
+                break;
+            default:
+                break;
+        }
+    }
+
     private boolean canSave() {
         return (this.uuid != null && this.blueTeam != null && this.redTeam != null);
     }
 
     public boolean save() {
         if (canSave()) {
-            return helper.insert(this) > 0;
+            return helper.insert(this) >= 0;
         } else {
             return false;
         }

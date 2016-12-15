@@ -1,6 +1,8 @@
 package com.example.craigblackburn.foostats;
 
 import android.database.SQLException;
+import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -13,6 +15,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class FTeam extends FModel {
+
+    private static final String TAG = "FTEAM";
 
     interface TeamDelegate {
         void onTaskComplete(ArrayList<FTeam> list);
@@ -89,15 +93,23 @@ public class FTeam extends FModel {
         return false;
     }
 
-    public int removePlayer(FPlayer player) {
-        if (Objects.equals(player1.getId(), player.getId())){
-            player1 = null;
-            return 0;
+    public int removePlayer(@NonNull FPlayer player) {
+        if (player == null)
+            return -1;
+        if (player1 != null) {
+            if (Objects.equals(player1.getId(), player.getId())){
+                player1 = null;
+                return 0;
+            }
         }
-        if (Objects.equals(player2.getId(), player.getId())) {
-            player2 = null;
-            return 1;
+
+        if (player2 != null) {
+            if (Objects.equals(player2.getId(), player.getId())) {
+                player2 = null;
+                return 1;
+            }
         }
+
         return -1;
     }
 
@@ -116,8 +128,10 @@ public class FTeam extends FModel {
             JSONObject obj = new JSONObject();
             obj.put("uuid", team.getId());
             obj.put("teamName", team.getTeamName());
-            obj.put("player1", FPlayer.serializePlayer(team.getPlayerOne()));
-            obj.put("player2", FPlayer.serializePlayer(team.getPlayerTwo()));
+            if (team.getPlayerOne() != null)
+                obj.put("player1", FPlayer.serializePlayer(team.getPlayerOne()));
+            if (team.getPlayerTwo() != null)
+                obj.put("player2", FPlayer.serializePlayer(team.getPlayerTwo()));
             return obj.toString();
         } catch (JSONException e) {
             // this should never get here!
@@ -155,7 +169,15 @@ public class FTeam extends FModel {
 
     public static FTeam deserialize(String jsonString) {
         FTeam team = null;
-        JSONObject obj = new JSONObject();
+        JSONObject obj;
+
+        try {
+            obj = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+
         try {
             String id = obj.getString("uuid");
             String name = obj.getString("teamName");
@@ -169,7 +191,7 @@ public class FTeam extends FModel {
             String player1Serialized = obj.getString("player1");
             team.setPlayerOne(FPlayer.deserializePlayer(player1Serialized));
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.d(TAG, "No value for player 1, FTeam deserializer.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -178,7 +200,7 @@ public class FTeam extends FModel {
             String player2Serialized = obj.getString("player2");
             team.setPlayerTwo(FPlayer.deserializePlayer(player2Serialized));
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.d(TAG, "No value for player 1, FTeam deserializer.");
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
     private TextView userLabel;
     private FModel model;
     private Button mButton;
+    private TextView numWins;
     private ProgressDialog progressDialog;
 
     @Override
@@ -43,10 +44,16 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
         FModel.initialize(dbHelper);
         model = new FModel(this);
         mButton = (Button) findViewById(R.id.test_button);
+        numWins = (TextView) findViewById(R.id.numWinsLabel);
 
         Intent intent = getIntent();
         String serializedUser = intent.getStringExtra("user");
-        mUser = User.deserialize(serializedUser);
+        if (serializedUser != null) {
+            mUser = User.deserialize(serializedUser);
+        } else {
+            mUser = User.getLoggedInUser(this);
+        }
+
 
         userLabel = (TextView) findViewById(R.id.user_label);
 
@@ -55,6 +62,17 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
             userLabel.setText(mUser.getName() + "'s Stat Overview");
         } catch (SQLException e) {
             e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            List<FPlayer> players = FPlayer.find();
+            for (FPlayer p : players) {
+                if (p.getEmail() == mUser.getEmail()) {
+                    numWins.setText(String.valueOf(p.getWins()));
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -80,12 +98,12 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
                 Log.d(TAG, player.getFirstName() + " uuid: " + player.getId());
             }
 
-            FTeam team = teamList.get(0);
-            Log.d(TAG, "Team before serialized:\n" + team.getDescription());
-            String teamJson = FTeam.serialize(team);
-            Log.d(TAG, "Serialized Team: " + teamJson);
-            FTeam deserializedTeam = FTeam.deserialize(teamJson);
-            Log.d(TAG, "Team Deserialized:\n" + deserializedTeam.getDescription());
+//            FTeam team = teamList.get(0);
+//            Log.d(TAG, "Team before serialized:\n" + team.getDescription());
+//            String teamJson = FTeam.serialize(team);
+//            Log.d(TAG, "Serialized Team: " + teamJson);
+//            FTeam deserializedTeam = FTeam.deserialize(teamJson);
+//            Log.d(TAG, "Team Deserialized:\n" + deserializedTeam.getDescription());
 
         } catch (Exception e) {
             e.printStackTrace();

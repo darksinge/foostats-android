@@ -1,8 +1,11 @@
 package com.example.craigblackburn.foostats;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -10,6 +13,9 @@ public class GameActivity extends AppCompatActivity {
 
     private FTeam blueTeam;
     private FTeam redTeam;
+    private FGame game;
+
+    private TextView scoreLabel;
 
     private Button blueAdd1Button;
     private Button blueAdd2Button;
@@ -34,10 +40,14 @@ public class GameActivity extends AppCompatActivity {
         Intent intent = getIntent();
         blueTeam = FTeam.deserialize(intent.getStringExtra("blueTeam"));
         redTeam = FTeam.deserialize(intent.getStringExtra("redTeam"));
+        game = new FGame(blueTeam, redTeam);
 
         if (blueTeam == null || redTeam == null) {
             throw new RuntimeException("Failed to deserialize team(s)!");
         }
+
+        scoreLabel = (TextView) findViewById(R.id.scoreLabel);
+        scoreLabel.setText("Blue Team : 0       Red Team : 0");
 
         blueAdd1Button = (Button) findViewById(R.id.blue1AddButton);
         blueAdd2Button = (Button) findViewById(R.id.blue2AddButton);
@@ -53,5 +63,135 @@ public class GameActivity extends AppCompatActivity {
         red1NameLabel = (TextView) findViewById(R.id.redP1NameLabel);
         red2NameLabel = (TextView) findViewById(R.id.redP2NameLabel);
 
+        blue1NameLabel.setText(blueTeam.getPlayerOne().getName());
+        blue2NameLabel.setText(blueTeam.getPlayerTwo().getName());
+
+        red1NameLabel.setText(redTeam.getPlayerOne().getName());
+        red2NameLabel.setText(redTeam.getPlayerTwo().getName());
+
+        addButtonListeners();
+
     }
+
+    public void updateScore() {
+        int blueTeamScore = game.getBlueTeamScore();
+        int redTeamScore = game.getRedTeamScore();
+        scoreLabel.setText("Blue Team : " + String.valueOf(blueTeamScore) + "     Red Team: " + String.valueOf(redTeamScore));
+        if (blueTeamScore == 10) {
+            blueTeam.getPlayerOne().addWin();
+            blueTeam.getPlayerTwo().addWin();
+            blueTeam.getPlayerOne().save();
+            blueTeam.getPlayerTwo().save();
+            new AlertDialog.Builder(GameActivity.this)
+                    .setTitle("Blue Team Won!")
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            Intent intent = new Intent(GameActivity.this, MainActivity.class);
+                            try {
+                                game.save();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            startActivity(intent);
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+        } else if (redTeamScore == 10) {
+            redTeam.getPlayerOne().addWin();
+            redTeam.getPlayerTwo().addWin();
+            redTeam.getPlayerOne().save();
+            redTeam.getPlayerTwo().save();
+            new AlertDialog.Builder(GameActivity.this)
+                    .setTitle("Red Team Won!")
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            Intent intent = new Intent(GameActivity.this, MainActivity.class);
+                            try {
+                                game.save();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            startActivity(intent);
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+        }
+
+    }
+
+    public void addButtonListeners() {
+        blueAdd1Button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                game.addPoint(blueTeam.getPlayerOne());
+                updateScore();
+            }
+        });
+
+        blueAdd2Button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                game.addPoint(blueTeam.getPlayerTwo());
+                updateScore();
+            }
+        });
+
+        blueSub1Button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                game.subtractPoint(0);
+                updateScore();
+            }
+        });
+
+        blueSub2Button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                game.subtractPoint(1);
+                updateScore();
+            }
+        });
+
+        redAdd1Button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                game.addPoint(redTeam.getPlayerTwo());
+                updateScore();
+            }
+        });
+
+        redAdd2Button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                game.addPoint(redTeam.getPlayerTwo());
+                updateScore();
+            }
+        });
+
+        redSub1Button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                game.subtractPoint(2);
+                updateScore();
+            }
+        });
+
+        redSub2Button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                game.subtractPoint(3);
+                updateScore();
+            }
+        });
+
+
+
+
+
+    }
+
 }

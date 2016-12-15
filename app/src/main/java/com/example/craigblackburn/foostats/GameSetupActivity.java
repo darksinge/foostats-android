@@ -35,6 +35,7 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
     private FTeam blueTeam;
     private FTeam redTeam;
     private List<FPlayer> randomPlayers;
+    private List<FPlayer> removedQueue;
 
     private PlayerListFragment playerListFragment;
     private boolean isRandomTeams;
@@ -58,6 +59,7 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
         blueTeam = new FTeam();
         redTeam = new FTeam();
         randomPlayers = new ArrayList<>();
+        removedQueue = new ArrayList<>();
 
         startGameButton.setEnabled(false);
 
@@ -233,6 +235,9 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                     }
                 }
                 if (blueTeam.playerCount() == 2 && playerListFragment != null) {
+                    for (FPlayer p : removedQueue) {
+                        mPlayers.remove(p);
+                    }
                     Snackbar.make(findViewById(android.R.id.content), "Blue Team Selected", Snackbar.LENGTH_LONG)
                             .show();
                     playerListFragment.setListFragmentCheckBoxEnabled(false);
@@ -258,6 +263,9 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                     }
                 }
                 if (redTeam.playerCount() == 2 && playerListFragment != null) {
+                    for (FPlayer p : removedQueue) {
+                        mPlayers.remove(p);
+                    }
                     Snackbar.make(findViewById(android.R.id.content), "Red Team Selected", Snackbar.LENGTH_LONG)
                             .show();
                     playerListFragment.setListFragmentCheckBoxEnabled(false);
@@ -273,6 +281,9 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                     randomPlayers.remove(player);
                 }
                 if (randomPlayers.size() == 4) {
+                    for (FPlayer p : removedQueue) {
+                        mPlayers.remove(p);
+                    }
                     Snackbar.make(findViewById(android.R.id.content), "Selected Players", Snackbar.LENGTH_LONG)
                             .show();
                     playerListFragment.setListFragmentCheckBoxEnabled(false);
@@ -283,16 +294,17 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                 break;
         }
 
+        if (didSelect && !mPlayers.contains(player)) {
+            mPlayers.add(player);
+            removedQueue.remove(player);
+        } else {
+            removedQueue.add(player);
+        }
+
         if (blueTeam.playerCount() == 2 && redTeam.playerCount() == 2) {
             startGameButton.setEnabled(true);
         } else if (randomPlayers.size() == 4) {
             startGameButton.setEnabled(true);
-        }
-
-        if (didSelect && !mPlayers.contains(player)) {
-            mPlayers.add(player);
-        } else {
-            mPlayers.remove(player);
         }
 
         Log.d(TAG, "Blue Team Count: " + String.valueOf(blueTeam.playerCount()));

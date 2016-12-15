@@ -39,6 +39,7 @@ public class FPlayer extends FModel {
     }
 
     private String uuid, facebookId, email, firstName, lastName, role, username;
+    private int numWins = 0;
     private List<FTeam> teams;
     private List<Achievements> achievements;
 
@@ -53,6 +54,7 @@ public class FPlayer extends FModel {
         this.role = role;
         this.username = username;
         this.teams = teams;
+        this.numWins = 0;
     }
 
     public FPlayer(String id, String facebookId, String email, String firstname, String lastname, String role, String username) {
@@ -64,6 +66,18 @@ public class FPlayer extends FModel {
         this.role = role;
         this.username = username;
         this.teams = new ArrayList<>();
+    }
+
+    public FPlayer(String id, String facebookId, String email, String firstname, String lastname, String role, String username, int numWins) {
+        this.uuid = id;
+        this.facebookId = facebookId;
+        this.email = email;
+        this.firstName = firstname;
+        this.lastName = lastname;
+        this.role = role;
+        this.username = username;
+        this.teams = new ArrayList<>();
+        this.numWins = numWins;
     }
 
     public void setId(String id) { this.uuid = id; }
@@ -121,6 +135,7 @@ public class FPlayer extends FModel {
             obj.put("lastName", player.getLastName());
             obj.put("role", player.getRole());
             obj.put("username", player.getUsername());
+            obj.put("numWins", player.getWins());
             return obj.toString();
         } catch (JSONException e) {
             e.printStackTrace();
@@ -138,20 +153,33 @@ public class FPlayer extends FModel {
             String lastname = obj.getString("lastName");
             String role = obj.getString("role");
             String username = obj.getString("username");
-            return new FPlayer(id, facebookId, email, firstname, lastname, role, username);
+            int numWins = obj.getInt("numWins");
+            return new FPlayer(id, facebookId, email, firstname, lastname, role, username, numWins);
         } catch (JSONException e) {
             e.printStackTrace();
             return null;
         }
     }
 
+    public int getWins() {
+        return this.numWins;
+    }
+
+    public void addWin() {
+        this.numWins++;
+    }
+
     private boolean canSave() {
         return this.uuid != null;
     }
 
+    public void setNumWins(int i) {
+        this.numWins = i;
+    }
+
     public boolean save() {
         if (canSave())
-            return helper.insert(this) > 0;
+            return helper.insert(this) >= 0;
         else
             return false;
     }
