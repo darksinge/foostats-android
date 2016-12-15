@@ -186,7 +186,12 @@ public class DBHelper extends SQLiteOpenHelper {
         if (!db.isOpen()) {
             db = getWritableDatabase();
         }
-        db.execSQL("DROP TABLE IF EXISTS " + USER_TABLE_NAME);
+
+        // set oldVersion to -1 to prevent user table from being overwritten on server data pull.
+        if (oldVersion > 0) {
+            db.execSQL("DROP TABLE IF EXISTS " + USER_TABLE_NAME);
+        }
+
         db.execSQL("DROP TABLE IF EXISTS " + PLAYER_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TEAM_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + GAME_TABLE_NAME);
@@ -198,6 +203,9 @@ public class DBHelper extends SQLiteOpenHelper {
         onUpgrade(getDatabase(), DB_VERSION, DB_VERSION);
     }
 
+    public void forceUpgradeGameData() {
+        onUpgrade(getDatabase(), -1, DB_VERSION);
+    }
 
 
     /**
@@ -225,7 +233,7 @@ public class DBHelper extends SQLiteOpenHelper {
         if (findUserById(user.getId()) != null) {
             return update(user);
         }
-        
+
         SQLiteDatabase db = getDatabase();
 
         ContentValues contentValues = new ContentValues();

@@ -31,7 +31,10 @@ public class FModel implements APIRequester.OnAPITaskCompleteListener {
 
     }
 
-    public void pullFromServer() {
+    public void updateFromServer() {
+        if (helper != null) {
+            helper.forceUpgradeGameData();
+        }
         APIRequester.getPlayers(this);
         APIRequester.getTeams(this);
     }
@@ -76,6 +79,12 @@ public class FModel implements APIRequester.OnAPITaskCompleteListener {
         if (mListener != null) {
             mListener.onTaskComplete(isSuccess, numRecordsInserted, MainActivity.TEAM_REQUEST_FLAG);
         }
+    }
+
+    @Override
+    public void onTeamDeleteResponse(boolean success) {
+        if (success)
+            updateFromServer();
     }
 
     @Override

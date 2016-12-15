@@ -34,12 +34,12 @@ public class FPlayer extends FModel {
     }
 
     private String uuid, facebookId, email, firstName, lastName, role, username;
-    private ArrayList<FTeam> teams;
-    private ArrayList<Achievements> achievements;
+    private List<FTeam> teams;
+    private List<Achievements> achievements;
 
     public FPlayer() {}
 
-    public FPlayer(String id, String facebookId, String email, String firstname, String lastname, String role, String username, ArrayList<FTeam> teams) {
+    public FPlayer(String id, String facebookId, String email, String firstname, String lastname, String role, String username, List<FTeam> teams) {
         this.uuid = id;
         this.facebookId = facebookId;
         this.email = email;
@@ -50,6 +50,8 @@ public class FPlayer extends FModel {
         this.teams = teams;
     }
 
+
+    public void setId(String id) { this.uuid = id; }
     public String getId() {
         return this.uuid;
     }
@@ -76,21 +78,19 @@ public class FPlayer extends FModel {
         return this.role;
     }
 
-    public String getUsername() {
-        return this.username;
-    }
+    public String getUsername() { return this.username; }
 
-    public ArrayList<FTeam> getTeams() {
+    public List<FTeam> getTeams() {
         return this.teams;
     }
 
-    public ArrayList<Achievements> getAchievments() {
+    public List<Achievements> getAchievments() {
         return this.achievements;
     }
 
     public static String serializeTeams(FPlayer player) {
         String flatten = "";
-        ArrayList<FTeam> teams = player.getTeams();
+        List<FTeam> teams = player.getTeams();
         for(FTeam team : teams) {
             flatten += team.getId() + ",";
         }
@@ -140,6 +140,12 @@ public class FPlayer extends FModel {
     public static List<FPlayer> find() throws Exception {
         if (helper != null)
             return helper.findPlayers();
+        throw new Exception("DBHelper instance has not been initialized!");
+    }
+
+    public static FPlayer find(String id) throws Exception {
+        if (helper != null)
+            return helper.findPlayerById(id);
         throw new Exception("DBHelper instance has not been initialized!");
     }
 

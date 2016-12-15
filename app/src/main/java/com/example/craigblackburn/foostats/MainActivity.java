@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
 
         try {
             mUser.save();
-            userLabel.setText(mUser.getName() + "'s Stats Quick Look");
+            userLabel.setText(mUser.getName() + "'s Stat Overview");
         } catch (SQLException e) {
             e.printStackTrace();
         } catch (Exception e) {
@@ -70,9 +70,11 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
         try {
             List<FPlayer> playerList = FPlayer.find();
             List<FTeam> teamList = FTeam.find();
+            List<User> userList = User.findAll();
 
-            Log.d(TAG, "Player Count: " + playerList.get(0).getUsername());
+            Log.d(TAG, "Player Count: " + playerList.size());
             Log.d(TAG, "Team Count: " + teamList.size());
+            Log.d(TAG, "User Count: " + userList.size());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -153,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
             case R.id.refresh:
                 if (model != null) {
                     showProgressDialog("Fetching all the data...");
-                    model.pullFromServer();
+                    model.updateFromServer();
                 }
             default:
                 return super.onOptionsItemSelected(item);

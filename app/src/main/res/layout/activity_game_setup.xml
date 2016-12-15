@@ -13,6 +13,13 @@
     tools:context="com.example.craigblackburn.foostats.GameSetupActivity"
     app:layout_anchorGravity="center_horizontal">
 
+    <Switch
+        android:text="Random Teams"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/switch1"
+        android:checked="false" />
+
     <TextView
         android:text="Blue Team Players"
         android:layout_width="wrap_content"
@@ -92,19 +99,36 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:orientation="vertical"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="bottom|center">
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_gravity="fill_vertical"
+            android:layout_above="@+id/start_game_button"
+            android:id="@+id/list_fragment_container">
+        </FrameLayout>
 
         <Button
-
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/Widget.AppCompat.Button.Colored"
             android:id="@+id/start_game_button"
             android:text="Start Game!" />
-    </LinearLayout>
+    </RelativeLayout>
+
+
+
+
+
+
 
 </LinearLayout>

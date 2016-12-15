@@ -12,14 +12,14 @@ import java.util.List;
 
 public class PlayerRecyclerViewAdapter extends RecyclerView.Adapter<PlayerRecyclerViewAdapter.ViewHolder> {
 
-    private int teamSelector;
     private final List<FPlayer> mPlayers;
-    private final PlayerListFragment.OnListFragmentInteractionListener mListener;
+    private final OnListFragmentInteractionListener mListener;
+    private PlayerListFragment.TeamSelector selector;
 
-    public PlayerRecyclerViewAdapter(List<FPlayer> list, int teamSelector, PlayerListFragment.OnListFragmentInteractionListener listener) {
+    public PlayerRecyclerViewAdapter(List<FPlayer> list, OnListFragmentInteractionListener listener, PlayerListFragment.TeamSelector selector) {
         this.mPlayers = list;
         this.mListener = listener;
-        this.teamSelector = teamSelector;
+        this.selector = selector;
     }
 
     @Override
@@ -35,13 +35,22 @@ public class PlayerRecyclerViewAdapter extends RecyclerView.Adapter<PlayerRecycl
         holder.mCheckboxView.setChecked(false);
         holder.mNameView.setText(mPlayers.get(position).getName());
 
+        holder.mCheckboxView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (null != mListener) {
+                    mListener.onListFragmentInteraction(holder.mPlayer, selector, holder.mCheckboxView.isChecked());
+                }
+            }
+        });
+
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (null != mListener) {
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
-                    mListener.onListFragmentInteraction(holder.mPlayer);
+                    mListener.onListFragmentInteraction(holder.mPlayer, selector, holder.mCheckboxView.isChecked());
                 }
             }
         });
@@ -69,5 +78,9 @@ public class PlayerRecyclerViewAdapter extends RecyclerView.Adapter<PlayerRecycl
         public String toString() {
             return super.toString() + " '" + mNameView.getText() + "'";
         }
+    }
+
+    interface OnListFragmentInteractionListener {
+        void onListFragmentInteraction(FPlayer player, PlayerListFragment.TeamSelector selector, boolean didSelect);
     }
 }
