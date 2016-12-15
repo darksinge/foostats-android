@@ -21,6 +21,7 @@ import com.facebook.login.LoginManager;
 import org.w3c.dom.Text;
 
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements FModel.ModelListener {
 
@@ -69,7 +70,9 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
         try {
             List<FPlayer> players = FPlayer.find();
             for (FPlayer p : players) {
-                if (p.getEmail() == mUser.getEmail()) {
+                String email = String .valueOf(p.getEmail());
+                String mEmail = String.valueOf(mUser.getEmail());
+                if (Objects.equals(email, mEmail)) {
                     numWins.setText(String.valueOf(p.getWins()));
                 }
             }
@@ -136,6 +139,18 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
     @Override
     protected void onResume() {
         super.onResume();
+        userLabel = (TextView) findViewById(R.id.user_label);
+        if (userLabel != null) {
+            try {
+                mUser.save();
+                userLabel.setText(mUser.getName() + "'s Stat Overview");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
 

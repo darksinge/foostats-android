@@ -56,7 +56,6 @@
             <TextView
                 android:textAlignment="center"
                 android:layout_weight="1"
-                android:id="@+id/numWinsLabel"
                 android:text="Wins/Losses"
                 android:textColor="@color/colorAccent"
                 android:textSize="24sp"
@@ -84,20 +83,20 @@
 
             <TextView
                 android:textAlignment="center"
-                android:layout_weight="1"
-                android:text="Games Played"
+                android:layout_weight="0"
+                android:text="Number of Wins"
                 android:textColor="@color/colorAccent"
                 android:textSize="24sp"
                 android:layout_width="match_parent"
-                android:layout_height="0dp" />
+                android:layout_height="wrap_content" />
 
             <TextView
                 android:textAlignment="center"
                 android:text="0"
+                android:id="@+id/numWinsLabel"
                 android:textColor="@color/colorPrimaryDark"
-                android:textSize="24sp"
+                android:textSize="20dp"
                 android:layout_weight="1"
-                android:id="@+id/games_played_label"
                 android:layout_width="match_parent"
                 android:layout_height="0dp" />
 

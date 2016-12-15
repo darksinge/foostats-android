@@ -94,8 +94,6 @@ public class FTeam extends FModel {
     }
 
     public int removePlayer(@NonNull FPlayer player) {
-        if (player == null)
-            return -1;
         if (player1 != null) {
             if (Objects.equals(player1.getId(), player.getId())){
                 player1 = null;
@@ -107,6 +105,13 @@ public class FTeam extends FModel {
             if (Objects.equals(player2.getId(), player.getId())) {
                 player2 = null;
                 return 1;
+            }
+        }
+
+        for (FPlayer p : playerOverflow) {
+            if (Objects.equals(p.getId(), player.getId())) {
+                playerOverflow.remove(p);
+                return 3;
             }
         }
 
@@ -245,23 +250,23 @@ public class FTeam extends FModel {
     }
 
     public int addPlayer(FPlayer player) {
-        if (player1 == null) {
+        if (this.player1 == null) {
             setPlayerOne(player);
             return 0;
-        } else if (player2 == null) {
+        } else if (this.player2 == null) {
             setPlayerTwo(player);
             return 1;
         }
 
-        // Add players to team in a queue-like FILO manner.
+        // Add players to team in a queue-like, FILO manner.
         List<FPlayer> players = getPlayers();
         players.add(0, player);
-        player1 = players.remove(0);
-        player2 = players.remove(0);
+        this.player1 = players.remove(0);
+        this.player2 = players.remove(0);
         for (FPlayer p : players) {
-            playerOverflow.add(p);
+            this.playerOverflow.add(p);
         }
-        return playerOverflow.size() + 1;
+        return 0;
     }
 
     public void setPlayerTwo(FPlayer player) {
@@ -269,6 +274,12 @@ public class FTeam extends FModel {
     }
 
     private boolean canSave() {
+        if (this.uuid == null) {
+            this.uuid = generateUuid();
+        }
+        if (this.teamName == null) {
+            this.teamName = generateUuid();
+        }
         return (this.uuid != null && this.teamName != null);
     }
 

@@ -38,13 +38,21 @@ public class GameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_game);
 
         Intent intent = getIntent();
-        blueTeam = FTeam.deserialize(intent.getStringExtra("blueTeam"));
-        redTeam = FTeam.deserialize(intent.getStringExtra("redTeam"));
-        game = new FGame(blueTeam, redTeam);
+        String blueTeamId = intent.getStringExtra("blueTeamId");
+        String redTeamId = intent.getStringExtra("redTeamId");
+
+        try {
+            blueTeam = FTeam.find(blueTeamId);
+            redTeam = FTeam.find(redTeamId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         if (blueTeam == null || redTeam == null) {
             throw new RuntimeException("Failed to deserialize team(s)!");
         }
+
+        game = new FGame(blueTeam, redTeam);
 
         scoreLabel = (TextView) findViewById(R.id.scoreLabel);
         scoreLabel.setText("Blue Team : 0       Red Team : 0");
@@ -77,11 +85,13 @@ public class GameActivity extends AppCompatActivity {
         int blueTeamScore = game.getBlueTeamScore();
         int redTeamScore = game.getRedTeamScore();
         scoreLabel.setText("Blue Team : " + String.valueOf(blueTeamScore) + "     Red Team: " + String.valueOf(redTeamScore));
-        if (blueTeamScore == 10) {
+        if (blueTeamScore >= 10) {
             blueTeam.getPlayerOne().addWin();
             blueTeam.getPlayerTwo().addWin();
-            blueTeam.getPlayerOne().save();
-            blueTeam.getPlayerTwo().save();
+            redTeam.getPlayerOne().save();
+            redTeam.getPlayerTwo().save();
+            blueTeam.save();
+            redTeam.save();
             new AlertDialog.Builder(GameActivity.this)
                     .setTitle("Blue Team Won!")
                     .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
@@ -98,7 +108,7 @@ public class GameActivity extends AppCompatActivity {
                     })
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .show();
-        } else if (redTeamScore == 10) {
+        } else if (redTeamScore >= 10) {
             redTeam.getPlayerOne().addWin();
             redTeam.getPlayerTwo().addWin();
             redTeam.getPlayerOne().save();

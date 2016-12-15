@@ -35,7 +35,6 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
     private FTeam blueTeam;
     private FTeam redTeam;
     private List<FPlayer> randomPlayers;
-    private List<FPlayer> removedQueue;
 
     private PlayerListFragment playerListFragment;
     private boolean isRandomTeams;
@@ -44,8 +43,6 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_setup);
-
-//        Intent intent = getIntent();
 
         selectBlueTeamButton = (Button) findViewById(R.id.select_blue_players);
         selectRedTeamButton = (Button) findViewById(R.id.select_red_players);
@@ -59,7 +56,6 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
         blueTeam = new FTeam();
         redTeam = new FTeam();
         randomPlayers = new ArrayList<>();
-        removedQueue = new ArrayList<>();
 
         startGameButton.setEnabled(false);
 
@@ -209,9 +205,11 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
     private void performIntentWithGameActivity(FTeam blue, FTeam red) {
         blue.generateName();
         red.generateName();
+        blue.save();
+        red.save();
         Intent intent = new Intent(this, GameActivity.class);
-        intent.putExtra("blueTeam", FTeam.serialize(blue));
-        intent.putExtra("redTeam", FTeam.serialize(red));
+        intent.putExtra("blueTeamId", blue.getId());
+        intent.putExtra("redTeamId", red.getId());
         startActivity(intent);
     }
 
@@ -235,12 +233,11 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                     }
                 }
                 if (blueTeam.playerCount() == 2 && playerListFragment != null) {
-                    for (FPlayer p : removedQueue) {
-                        mPlayers.remove(p);
-                    }
+                    mPlayers.remove(blueTeam.getPlayerOne());
+                    mPlayers.remove(blueTeam.getPlayerTwo());
+
                     Snackbar.make(findViewById(android.R.id.content), "Blue Team Selected", Snackbar.LENGTH_LONG)
                             .show();
-                    playerListFragment.setListFragmentCheckBoxEnabled(false);
                     getSupportFragmentManager().beginTransaction()
                             .remove(playerListFragment)
                             .commit();
@@ -263,12 +260,10 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                     }
                 }
                 if (redTeam.playerCount() == 2 && playerListFragment != null) {
-                    for (FPlayer p : removedQueue) {
-                        mPlayers.remove(p);
-                    }
+                    mPlayers.remove(redTeam.getPlayerOne());
+                    mPlayers.remove(redTeam.getPlayerTwo());
                     Snackbar.make(findViewById(android.R.id.content), "Red Team Selected", Snackbar.LENGTH_LONG)
                             .show();
-                    playerListFragment.setListFragmentCheckBoxEnabled(false);
                     getSupportFragmentManager().beginTransaction()
                             .remove(playerListFragment)
                             .commit();
@@ -281,24 +276,13 @@ public class GameSetupActivity extends AppCompatActivity implements PlayerListFr
                     randomPlayers.remove(player);
                 }
                 if (randomPlayers.size() == 4) {
-                    for (FPlayer p : removedQueue) {
-                        mPlayers.remove(p);
-                    }
                     Snackbar.make(findViewById(android.R.id.content), "Selected Players", Snackbar.LENGTH_LONG)
                             .show();
-                    playerListFragment.setListFragmentCheckBoxEnabled(false);
                     getSupportFragmentManager().beginTransaction()
                             .remove(playerListFragment)
                             .commit();
                 }
                 break;
-        }
-
-        if (didSelect && !mPlayers.contains(player)) {
-            mPlayers.add(player);
-            removedQueue.remove(player);
-        } else {
-            removedQueue.add(player);
         }
 
         if (blueTeam.playerCount() == 2 && redTeam.playerCount() == 2) {
