@@ -1,6 +1,8 @@
 package com.example.craigblackburn.foostats;
 
-public class Achievements extends FModels {
+import android.database.SQLException;
+
+public class Achievements extends FModel {
     private String uuid;
     private String name;
     public Achievements(){}
@@ -20,6 +22,10 @@ public class Achievements extends FModels {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void save() throws SQLException {
+        throw new SQLException("Save method for Achievmenet is currently not implemented.");
     }
 
 }

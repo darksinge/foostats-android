@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/activity_main"
     android:orientation="vertical"
     android:gravity="center"
@@ -13,13 +14,103 @@
     tools:context="com.example.craigblackburn.foostats.MainActivity">
 
 
+    <ImageView
+        android:layout_height="125dp"
+        app:srcCompat="@drawable/foosball_ball"
+        android:id="@+id/imageView"
+        android:layout_margin="@dimen/activity_vertical_margin"
+        android:layout_width="125dp"
+        android:adjustViewBounds="false"
+        android:scaleType="fitCenter" />
 
     <android.support.v7.widget.AppCompatButton
-        android:id="@+id/button"
+        android:id="@+id/test_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Test Button"
         android:onClick="onTestButtonClick"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:theme="@style/AppTheme.Button"/>
+
+    <TextView
+        android:id="@+id/user_label"
+        android:text="User's Quick Look Stats"
+        android:textAlignment="center"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="20sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical">
+
+            <TextView
+                android:textAlignment="center"
+                android:layout_weight="1"
+                android:text="Wins/Losses"
+                android:textColor="@color/colorAccent"
+                android:textSize="24sp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp" />
+
+            <TextView
+                android:text="0 : 0"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="24sp"
+                android:textAlignment="center"
+                android:layout_weight="1"
+                android:id="@+id/wins_losses_label"
+                android:layout_width="match_parent"
+                android:layout_height="0dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical">
+
+            <TextView
+                android:textAlignment="center"
+                android:layout_weight="1"
+                android:text="Games Played"
+                android:textColor="@color/colorAccent"
+                android:textSize="24sp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp" />
+
+            <TextView
+                android:textAlignment="center"
+                android:text="0"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="24sp"
+                android:layout_weight="1"
+                android:id="@+id/games_played_label"
+                android:layout_width="match_parent"
+                android:layout_height="0dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/start_game_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="New Game"
+        android:onClick="startNewGame"
         style="@style/Widget.AppCompat.Button.Colored"
         android:theme="@style/AppTheme.Button"/>
 

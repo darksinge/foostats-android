@@ -2,10 +2,9 @@ package com.example.craigblackburn.foostats;
 
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.UUID;
 
 
-public class FGame extends FModels {
+public class FGame extends FModel {
 
     interface GameDelegate {
         void onTaskComplete(ArrayList<FGame> list);

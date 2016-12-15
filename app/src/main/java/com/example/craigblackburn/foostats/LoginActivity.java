@@ -49,6 +49,7 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.LoggingBehavior;
 import com.facebook.appevents.AppEventsLogger;
+import com.facebook.login.LoginBehavior;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -67,6 +68,8 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class LoginActivity extends AppCompatActivity {
 
+    private static String TAG = "LOGIN_ACTIVITY";
+
     private CallbackManager callbackManager;
     private ProgressDialog progressDialog;
     private LoginButton loginButton;
@@ -75,16 +78,25 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
+        FacebookSdk.setIsDebugEnabled(true);
         FacebookSdk.addLoggingBehavior(LoggingBehavior.INCLUDE_ACCESS_TOKENS);
         FacebookSdk.addLoggingBehavior(LoggingBehavior.REQUESTS);
         AppEventsLogger.activateApp(getApplication());
         setContentView(R.layout.activity_login);
 
+//        DBHelper dbHelper = DBHelper.newInstance(getApplicationContext());
+//        dbHelper.openDatabase();
+//        FModel.initialize(dbHelper);
+//        dbHelper.forceUpgrade();
+
         callbackManager = CallbackManager.Factory.create();
+
         loginButton = (LoginButton) findViewById(R.id.login_button);
+        loginButton.setReadPermissions(Arrays.asList("email", "public_profile"));
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
+                Log.d(TAG, "ON SUCCESS CALLBACK!!!!!!!");
                 attemptLogin();
             }
 
@@ -96,43 +108,51 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onError(FacebookException error) {
                 error.printStackTrace();
-                new AlertDialog.Builder(getApplicationContext())
-                            .setTitle("Login Error")
-                            .setMessage("There was an error logging you in.")
-                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            })
-                            .setIcon(android.R.drawable.ic_dialog_alert)
-                            .show();
+                new AlertDialog.Builder(LoginActivity.this)
+                        .setTitle("Login Error")
+                        .setMessage("There was an error logging you in.")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
             }
         });
 
+        attemptLogin();
     }
 
     public synchronized void attemptLogin() {
-        if (AccessToken.getCurrentAccessToken() != null) {
-            User user = User.findOne();
-            if (user == null) {
-                showProgressDialog("Logging you in...");
-                makeGraphRequest(new LoginListener() {
-                    @Override
-                    public void onTaskComplete(User user) {
-                        dismissProgressDialog();
+        Log.d(TAG, "ATTEMPTING LOGIN!!!!!!!!!!");
+        User user = User.getLoggedInUser(this);
+        if (user != null) {
+            Log.d(TAG, "THE LOGGED IN USER EXISTS!!!!!!!!!");
+            performSegueToMainActivity(user);
+        } else if (AccessToken.getCurrentAccessToken() != null) {
+            Log.d(TAG, "ABOUT TO MAKE GRAPH REQUEST - 1 !!!!!!!!!");
+            showProgressDialog("Grabbing some fancy info...");
+            makeGraphRequest(new LoginListener() {
+                @Override
+                public void onTaskComplete(User user) {
+                    dismissProgressDialog();
+                    Log.d(TAG, "ON TASK COMPLETE - 1 !!!!!!!");
+                    try {
+                        user.save();
                         performSegueToMainActivity(user);
+                    } catch (SQLiteException e) {
+                        e.printStackTrace();
                     }
-                });
-            }
+                }
+            });
         } else {
-            LoginManager instance = LoginManager.getInstance();
-            if (instance != null) {
-                instance.logInWithReadPermissions(this, Arrays.asList("email", "public_profile"));
-            }
+            Log.d(TAG, "LOGIN ATTEMPT FAILED!!!!!");
         }
     }
 
     public void performSegueToMainActivity(User user) {
+        Log.d(TAG, "PERFORMING INTENT!!!!!!!");
         Intent intent = new Intent(this, MainActivity.class);
         if (user != null) {
             intent.putExtra("user", User.serialize(user));
@@ -149,7 +169,7 @@ public class LoginActivity extends AppCompatActivity {
 
     public void makeGraphRequest(final LoginListener listener) {
         Bundle parameters = new Bundle();
-        parameters.putString("fields", "id,email");
+        parameters.putString("fields", "id,email,name");
 
         GraphRequest request = GraphRequest.newMeRequest(
                 AccessToken.getCurrentAccessToken(),
@@ -160,9 +180,10 @@ public class LoginActivity extends AppCompatActivity {
                         try {
                             String email = object.getString("email");
                             String id = object.getString("id");
+                            String name = object.getString("name");
                             String token = AccessToken.getCurrentAccessToken().getToken();
 
-                            user = new User(id, token, email);
+                            user = new User(id, token, email, name);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -212,30 +233,56 @@ public class LoginActivity extends AppCompatActivity {
     public boolean onPrepareOptionsMenu (Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
-        boolean isLogged = User.findOne() != null;
+        boolean isLogged = User.getLoggedInUser(this) != null;
 
         menu.findItem(R.id.logout).setVisible(isLogged);
+        menu.findItem(R.id.dashboard).setVisible(isLogged);
 
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    protected void onResume() {
+        super.onResume();
+        AccessToken token = AccessToken.getCurrentAccessToken();
+        Log.d(TAG, "Token NOT NULL: " + String.valueOf(token != null));
+        attemptLogin();
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent = new Intent(this, LoginActivity.class);
         switch (item.getItemId()) {
             case R.id.settings:
-
+                Log.d(TAG, "USER ACCESS TOKEN: " + AccessToken.getCurrentAccessToken().getToken());
                 return true;
+            case R.id.dashboard:
+                User user = User.getLoggedInUser(this);
+                if (user != null) {
+                    performSegueToMainActivity(user);
+                    return true;
+                } else {
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(LoginActivity.this);
+                    dialog.setTitle("Error")
+                            .setMessage("Please login first.")
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            })
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .show();
+                    return false;
+                }
             case R.id.help:
-
+                // not implemented
                 return true;
             case R.id.logout:
                 LoginManager.getInstance().logOut();
-                Intent intent = new Intent(this, LoginActivity.class);
                 startActivity(intent);
                 return true;
             case R.id.stats:
-
+                // not implemented
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

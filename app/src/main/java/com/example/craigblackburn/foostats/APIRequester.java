@@ -19,17 +19,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
 public class APIRequester extends Activity {
 
-    interface APITaskHelper {
-        void onAsyncTaskComplete(JSONObject json);
-    }
-
     private static String TAG = "API_REQUESTER";
     private APITaskHelper mListener;
+    private OnAPITaskCompleteListener onAPITaskCompleteListener;
 
     private static String PLAYERS = "/player";
     private static String TEAMS = "/team";
@@ -38,13 +36,17 @@ public class APIRequester extends Activity {
 
     private static String BASE_URL = "https://foostats.herokuapp.com";
 
-    private APIRequester() {}
+    public APIRequester() {}
 
-    public APIRequester(APITaskHelper listener) {
+    public APIRequester(OnAPITaskCompleteListener listener) {
+        onAPITaskCompleteListener = listener;
+    }
+
+    private APIRequester(APITaskHelper listener) {
         mListener = listener;
     }
 
-    private void getFoostatRequest(String urlString) throws IOException, JSONException {
+    private void foostatRequestMethodGET(String urlString) throws IOException, JSONException {
 
         AsyncTask<String, Void, String> task = new AsyncTask<String, Void, String>() {
 
@@ -110,15 +112,13 @@ public class APIRequester extends Activity {
         return null;
     }
 
-    public static void getPlayers(final FPlayer.PlayerDelegate delegate) {
+    public static void getPlayers(final OnAPITaskCompleteListener delegate) {
 
         new APIRequester(new APITaskHelper() {
             @Override
             public void onAsyncTaskComplete(JSONObject json) {
                 Gson gson = new Gson();
-
-                ArrayList<FPlayer> list = new ArrayList<>();
-
+                List<FPlayer> list = new ArrayList<>();
                 try {
                     JSONArray playersJson = json.getJSONArray("players");
 
@@ -126,44 +126,37 @@ public class APIRequester extends Activity {
                         JSONObject obj = playersJson.getJSONObject(i);
                         list.add(gson.fromJson(obj.toString(), FPlayer.class));
                     }
-
-                    delegate.onTaskComplete(list);
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
+                delegate.onPlayerResponse(list);
             }
         }).requestPlayers();
     }
 
-    public static void getTeams(final FTeam.TeamDelegate delegate) {
+    public static void getTeams(final OnAPITaskCompleteListener delegate) {
         new APIRequester(new APITaskHelper() {
             @Override
             public void onAsyncTaskComplete(JSONObject json) {
                 Gson gson = new Gson();
-
                 ArrayList<FTeam> list = new ArrayList<>();
-
                 try {
                     JSONArray teamsJson = json.getJSONArray("teams");
-
                     for (int i = 0; i < teamsJson.length(); i++) {
                         JSONObject obj = teamsJson.getJSONObject(i);
                         list.add(gson.fromJson(obj.toString(), FTeam.class));
                     }
-                    delegate.onTaskComplete(list);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
+                delegate.onTeamResponse(list);
             }
         }).requestTeams();
     }
 
     public void requestPlayers() {
         try {
-            getFoostatRequest(BASE_URL + PLAYERS);
+            foostatRequestMethodGET(BASE_URL + PLAYERS);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -171,11 +164,21 @@ public class APIRequester extends Activity {
 
     public void requestTeams() {
         try {
-            getFoostatRequest(BASE_URL + TEAMS);
+            foostatRequestMethodGET(BASE_URL + TEAMS);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private interface APITaskHelper {
+        void onAsyncTaskComplete(JSONObject json);
+    }
+
+    public interface OnAPITaskCompleteListener {
+        void onPlayerResponse(List<FPlayer> players);
+        void onTeamResponse(List<FTeam> teams);
+        void onGameResponse(List<FGame> games);
+        void onAchievementsResponse(List<Achievements> achievements);
+    }
 
 }

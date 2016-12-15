@@ -1,10 +1,11 @@
 package com.example.craigblackburn.foostats;
 
-import android.content.Context;
+import android.database.SQLException;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class FTeam extends FModels {
+public class FTeam extends FModel {
 
     interface TeamDelegate {
         void onTaskComplete(ArrayList<FTeam> list);
@@ -64,6 +65,13 @@ public class FTeam extends FModels {
             return helper.insert(this) > 0;
         else
             return false;
+    }
+
+    public static List<FTeam> find() throws Exception {
+        if (helper != null) {
+            return helper.findTeams();
+        }
+        throw new Exception("DBHelper instance has not been initialized.");
     }
 
 

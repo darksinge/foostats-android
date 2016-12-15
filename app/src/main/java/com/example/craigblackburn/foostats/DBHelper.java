@@ -3,10 +3,14 @@ package com.example.craigblackburn.foostats;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
+import android.util.Log;
+
 import java.util.ArrayList;
 
 
@@ -29,11 +33,13 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private final static String USER_TABLE_NAME = "users";
     private final static String USER_COLUMN_ID = "facebook_id";
-    private final static String USER_COLUMN_EMAIL = "email";
     private final static String USER_COLUMN_ACCESS_TOKEN = "access_token";
+    private final static String USER_COLUMN_EMAIL = "email";
+    private final static String USER_COLUMN_NAME = "name";
 
     private final static String PLAYER_TABLE_NAME = "fplayers";
     private final static String PLAYER_COLUMN_ID = "uuid";
+    private final static String PLAYER_COLUMN_FB_ID = "facebook_id";
     private final static String PLAYER_COLUMN_EMAIL = "email";
     private final static String PLAYER_COLUMN_FIRSTNAME = "firstName";
     private final static String PLAYER_COLUMN_LASTNAME = "lastName";
@@ -118,26 +124,28 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String createUserTableStatement = "CREATE TABLE IF NOT EXISTS " + USER_TABLE_NAME + "("
-                + USER_COLUMN_ID + " INTEGER PRIMARY KEY,"
-                + USER_COLUMN_EMAIL + " TEXT,"
-                + USER_COLUMN_ACCESS_TOKEN + " TEXT" + ");";
+                + USER_COLUMN_ID + " INTEGER PRIMARY KEY UNIQUE,"
+                + USER_COLUMN_EMAIL + " TEXT UNIQUE NOT NULL,"
+                + USER_COLUMN_ACCESS_TOKEN + " TEXT NOT NULL,"
+                + USER_COLUMN_NAME + " TEXT NOT NULL" + ");";
         db.execSQL(createUserTableStatement);
 
         String createPlayerTableStatement = "CREATE TABLE IF NOT EXISTS " + PLAYER_TABLE_NAME + "("
-                + PLAYER_COLUMN_ID + " TEXT PRIMARY KEY, "
-                + PLAYER_COLUMN_EMAIL + " TEXT, "
+                + PLAYER_COLUMN_ID + " TEXT PRIMARY KEY UNIQUE, "
+                + PLAYER_COLUMN_FB_ID + " TEXT UNIQUE, "
+                + PLAYER_COLUMN_EMAIL + " TEXT UNIQUE, "
                 + PLAYER_COLUMN_FIRSTNAME + " TEXT, "
                 + PLAYER_COLUMN_LASTNAME + " TEXT, "
                 + PLAYER_COLUMN_ROLE + " TEXT, "
-                + PLAYER_COLUMN_USERNAME + " TEXT, "
+                + PLAYER_COLUMN_USERNAME + " TEXT UNIQUE, "
                 + PLAYER_COLUMN_NAME + " TEXT, "
                 + PLAYER_COLUMN_TEAMS + " TEXT, "
                 + PLAYER_COLUMN_ACHIEVEMENTS + " TEXT" + ");";
         db.execSQL(createPlayerTableStatement);
 
         String createTeamTableStatement = "CREATE TABLE IF NOT EXISTS " + TEAM_TABLE_NAME + "("
-                + TEAM_COLUMN_ID + " TEXT PRIMARY KEY, "
-                + TEAM_COLUMN_NAME + " TEXT, "
+                + TEAM_COLUMN_ID + " TEXT PRIMARY KEY UNIQUE, "
+                + TEAM_COLUMN_NAME + " TEXT UNIQUE, "
                 + TEAM_COLUMN_PLAYER1 + " TEXT, "
                 + TEAM_COLUMN_PLAYER2 + " TEXT, "
                 + "FOREIGN KEY(" + TEAM_COLUMN_PLAYER1 + ") REFERENCES " + PLAYER_TABLE_NAME + "(" + PLAYER_COLUMN_ID + "), "
@@ -145,7 +153,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(createTeamTableStatement);
 
         String createGameTableStatement = "CREATE TABLE IF NOT EXISTS " + GAME_TABLE_NAME + "("
-                + GAME_COLUMN_ID + " TEXT PRIMARY KEY, "
+                + GAME_COLUMN_ID + " TEXT PRIMARY KEY UNIQUE, "
                 + GAME_COLUMN_BLUE_TEAM_ID + " TEXT, "
                 + GAME_COLUMN_RED_TEAM_ID + " TEXT, "
                 + GAME_COLUMN_BLUE_P1 + " TEXT, "
@@ -168,6 +176,9 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (!db.isOpen()) {
+            db = getWritableDatabase();
+        }
         db.execSQL("DROP TABLE IF EXISTS " + USER_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + PLAYER_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TEAM_TABLE_NAME);
@@ -195,7 +206,8 @@ public class DBHelper extends SQLiteOpenHelper {
             String id = cursor.getString(cursor.getColumnIndex(USER_COLUMN_ID));
             String token = cursor.getString(cursor.getColumnIndex(USER_COLUMN_ACCESS_TOKEN));
             String email = cursor.getString(cursor.getColumnIndex(USER_COLUMN_EMAIL));
-            list.add(new User(id, token, email));
+            String name = cursor.getString(cursor.getColumnIndex(USER_COLUMN_NAME));
+            list.add(new User(id, token, email, name));
             cursor.moveToNext();
         }
         cursor.close();
@@ -215,6 +227,7 @@ public class DBHelper extends SQLiteOpenHelper {
         contentValues.put(USER_COLUMN_ID, user.getFacebookId());
         contentValues.put(USER_COLUMN_ACCESS_TOKEN, user.getAccessToken());
         contentValues.put(USER_COLUMN_EMAIL, user.getEmail());
+        contentValues.put(USER_COLUMN_NAME, user.getName());
         cursor.close();
         return (int) db.insert(USER_TABLE_NAME, null, contentValues);
     }
@@ -222,6 +235,17 @@ public class DBHelper extends SQLiteOpenHelper {
     public User findUserById(String id) {
         SQLiteDatabase db = getDatabase();
         Cursor cursor = db.query(USER_TABLE_NAME, null, USER_COLUMN_ID + "=?", new String[]{id}, null, null, null, null);
+        ArrayList<User> list = parseUserResponse(cursor);
+        if (list.size() > 0) {
+            return list.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    public User findUserByAccessToken(String accessToken) {
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.query(USER_TABLE_NAME, null, USER_COLUMN_ID + "=?", new String[]{accessToken}, null, null, null, null);
         ArrayList<User> list = parseUserResponse(cursor);
         if (list.size() > 0) {
             return list.get(0);
@@ -241,6 +265,7 @@ public class DBHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(USER_COLUMN_EMAIL, user.getEmail());
         values.put(USER_COLUMN_ACCESS_TOKEN, user.getAccessToken());
+        values.put(USER_COLUMN_NAME, user.getName());
         return db.update(USER_TABLE_NAME, values, USER_COLUMN_ID + "=?", new String[]{user.getFacebookId()});
     }
 
@@ -337,6 +362,7 @@ public class DBHelper extends SQLiteOpenHelper {
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
             String id = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_ID));
+            String facebookId = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_FB_ID));
             String email = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_EMAIL));
             String firstname = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_FIRSTNAME));
             String lastname = cursor.getString(cursor.getColumnIndex(PLAYER_COLUMN_LASTNAME));
@@ -346,7 +372,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
             ArrayList<FTeam> teams = FPlayer.deserializeTeams(flatTeams);
 
-            list.add(new FPlayer(id, email, firstname, lastname, role, username, teams));
+            list.add(new FPlayer(id, facebookId, email, firstname, lastname, role, username, teams));
 
             cursor.moveToNext();
         }
@@ -365,18 +391,46 @@ public class DBHelper extends SQLiteOpenHelper {
 
         ContentValues values = new ContentValues();
         values.put(PLAYER_COLUMN_EMAIL, player.getEmail());
+        values.put(PLAYER_COLUMN_FB_ID, player.getFacebookId());
         values.put(PLAYER_COLUMN_FIRSTNAME, player.getFirstName());
         values.put(PLAYER_COLUMN_LASTNAME, player.getLastName());
         values.put(PLAYER_COLUMN_ROLE, player.getRole());
         values.put(PLAYER_COLUMN_USERNAME, player.getUsername());
         values.put(PLAYER_COLUMN_TEAMS, FPlayer.serializeTeams(player));
         cursor.close();
-        return (int) db.insert(PLAYER_TABLE_NAME, null, values);
+        try {
+            return (int) db.insert(PLAYER_TABLE_NAME, null, values);
+        }catch (SQLiteConstraintException e) {
+            Log.d(TAG, e.getMessage());
+            return -1;
+        }
     }
 
     public FPlayer findPlayerById(String id) {
         SQLiteDatabase db = getDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_ID + "=" + id, null);
+        ArrayList<FPlayer> list = parsePlayerResponse(cursor);
+        if (list.size() > 0) {
+            return list.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    public FPlayer findPlayerByEmail(String email) {
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_EMAIL + "=" + email, null);
+        ArrayList<FPlayer> list = parsePlayerResponse(cursor);
+        if (list.size() > 0) {
+            return list.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    public FPlayer findPlayerByFacebookId(String id) {
+        SQLiteDatabase db = getDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_FB_ID + "=" + id, null);
         ArrayList<FPlayer> list = parsePlayerResponse(cursor);
         if (list.size() > 0) {
             return list.get(0);

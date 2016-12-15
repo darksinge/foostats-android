@@ -1,6 +1,7 @@
 package com.example.craigblackburn.foostats;
 
 import java.util.ArrayList;
+import java.util.List;
 
 //     Example response
 //    {
@@ -26,20 +27,21 @@ import java.util.ArrayList;
 //            "name":"Craig Blackburn"
 //    }
 
-public class FPlayer extends FModels {
+public class FPlayer extends FModel {
 
     interface PlayerDelegate {
         void onTaskComplete(ArrayList<FPlayer> list);
     }
 
-    private String uuid, email, firstName, lastName, role, username;
+    private String uuid, facebookId, email, firstName, lastName, role, username;
     private ArrayList<FTeam> teams;
     private ArrayList<Achievements> achievements;
 
     public FPlayer() {}
 
-    public FPlayer(String id, String email, String firstname, String lastname, String role, String username, ArrayList<FTeam> teams) {
+    public FPlayer(String id, String facebookId, String email, String firstname, String lastname, String role, String username, ArrayList<FTeam> teams) {
         this.uuid = id;
+        this.facebookId = facebookId;
         this.email = email;
         this.firstName = firstname;
         this.lastName = lastname;
@@ -51,6 +53,8 @@ public class FPlayer extends FModels {
     public String getId() {
         return this.uuid;
     }
+
+    public String getFacebookId() { return this.facebookId; }
 
     public String getEmail() {
         return this.email;
@@ -133,11 +137,10 @@ public class FPlayer extends FModels {
             return false;
     }
 
-    public static ArrayList<FPlayer> find() {
+    public static List<FPlayer> find() throws Exception {
         if (helper != null)
             return helper.findPlayers();
-        else
-            return null;
+        throw new Exception("DBHelper instance has not been initialized!");
     }
 
     public String toString() {

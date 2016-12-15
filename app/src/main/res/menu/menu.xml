@@ -2,11 +2,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <item android:id="@+id/dashboard"
+        android:title="Dashboard"/>
+
     <item android:title="New Game"
         android:id="@+id/new_game"/>
 
     <item android:title="@string/menu_settings_text"
         android:id="@+id/settings" />
+
+    <item android:id="@+id/refresh"
+        android:title="Refresh data" />
 
     <item android:id="@+id/stats"
         android:title="@string/menu_view_stats_text"/>
@@ -15,6 +21,5 @@
         android:title="@string/menu_help" />
 
     <item android:id="@+id/logout"
-        android:title="@string/menu_logout_text"
-        android:visible="true" />
+        android:title="@string/menu_logout_text" />
 </menu>
