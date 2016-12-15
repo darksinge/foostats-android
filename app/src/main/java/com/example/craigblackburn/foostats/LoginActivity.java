@@ -78,7 +78,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
-        FacebookSdk.setIsDebugEnabled(true);
+//        FacebookSdk.setIsDebugEnabled(true);
         FacebookSdk.addLoggingBehavior(LoggingBehavior.INCLUDE_ACCESS_TOKENS);
         FacebookSdk.addLoggingBehavior(LoggingBehavior.REQUESTS);
         AppEventsLogger.activateApp(getApplication());
@@ -96,7 +96,7 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                Log.d(TAG, "ON SUCCESS CALLBACK!!!!!!!");
+                Log.d(TAG, "ON SUCCESS CALLBACK");
                 attemptLogin();
             }
 
@@ -125,19 +125,19 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public synchronized void attemptLogin() {
-        Log.d(TAG, "ATTEMPTING LOGIN!!!!!!!!!!");
+        Log.d(TAG, "ATTEMPTING LOGIN");
         User user = User.getLoggedInUser(this);
         if (user != null) {
-            Log.d(TAG, "THE LOGGED IN USER EXISTS!!!!!!!!!");
+            Log.d(TAG, "THE LOGGED IN USER EXISTS");
             performSegueToMainActivity(user);
         } else if (AccessToken.getCurrentAccessToken() != null) {
-            Log.d(TAG, "ABOUT TO MAKE GRAPH REQUEST - 1 !!!!!!!!!");
+            Log.d(TAG, "ABOUT TO MAKE GRAPH REQUEST - 1 ");
             showProgressDialog("Grabbing some fancy info...");
             makeGraphRequest(new LoginListener() {
                 @Override
                 public void onTaskComplete(User user) {
                     dismissProgressDialog();
-                    Log.d(TAG, "ON TASK COMPLETE - 1 !!!!!!!");
+                    Log.d(TAG, "ON TASK COMPLETE - 1 ");
                     try {
                         user.save();
                         performSegueToMainActivity(user);
@@ -147,12 +147,12 @@ public class LoginActivity extends AppCompatActivity {
                 }
             });
         } else {
-            Log.d(TAG, "LOGIN ATTEMPT FAILED!!!!!");
+            Log.d(TAG, "LOGIN ATTEMPT FAILED     ");
         }
     }
 
     public void performSegueToMainActivity(User user) {
-        Log.d(TAG, "PERFORMING INTENT!!!!!!!");
+        Log.d(TAG, "PERFORMING INTENT");
         Intent intent = new Intent(this, MainActivity.class);
         if (user != null) {
             intent.putExtra("user", User.serialize(user));
@@ -254,7 +254,16 @@ public class LoginActivity extends AppCompatActivity {
         Intent intent = new Intent(this, LoginActivity.class);
         switch (item.getItemId()) {
             case R.id.settings:
-                Log.d(TAG, "USER ACCESS TOKEN: " + AccessToken.getCurrentAccessToken().getToken());
+                new AlertDialog.Builder(LoginActivity.this)
+                        .setTitle("Info")
+                        .setMessage("This has not been implemented yet.")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
                 return true;
             case R.id.dashboard:
                 User user = User.getLoggedInUser(this);
@@ -262,8 +271,8 @@ public class LoginActivity extends AppCompatActivity {
                     performSegueToMainActivity(user);
                     return true;
                 } else {
-                    AlertDialog.Builder dialog = new AlertDialog.Builder(LoginActivity.this);
-                    dialog.setTitle("Error")
+                    new AlertDialog.Builder(LoginActivity.this)
+                            .setTitle("Error")
                             .setMessage("Please login first.")
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {

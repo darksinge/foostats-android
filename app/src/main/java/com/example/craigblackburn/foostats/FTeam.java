@@ -57,7 +57,7 @@ public class FTeam extends FModel {
     }
 
     private boolean canSave() {
-        return (this.uuid != null && this.teamName != null && this.player1 != null && this.player2 != null);
+        return (this.uuid != null && this.teamName != null);
     }
 
     public boolean save() {

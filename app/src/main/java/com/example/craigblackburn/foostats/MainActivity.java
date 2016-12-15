@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements FModel.ModelListe
             List<FPlayer> playerList = FPlayer.find();
             List<FTeam> teamList = FTeam.find();
 
-            Log.d(TAG, "Player Count: " + playerList.size());
+            Log.d(TAG, "Player Count: " + playerList.get(0).getUsername());
             Log.d(TAG, "Team Count: " + teamList.size());
 
         } catch (Exception e) {

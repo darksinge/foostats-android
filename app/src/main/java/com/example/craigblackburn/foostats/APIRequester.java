@@ -1,6 +1,7 @@
 package com.example.craigblackburn.foostats;
 
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.AsyncQueryHandler;
 import android.os.AsyncTask;
@@ -36,6 +37,7 @@ public class APIRequester extends Activity {
 
     private static String BASE_URL = "https://foostats.herokuapp.com";
 
+    @SuppressWarnings("unused")
     public APIRequester() {}
 
     public APIRequester(OnAPITaskCompleteListener listener) {
@@ -94,12 +96,22 @@ public class APIRequester extends Activity {
             @Override
             protected void onPostExecute(String result) {
                 System.out.println("END CALL");
+                JSONObject json;
                 try {
-                    JSONObject json = new JSONObject(result);
-                    mListener.onAsyncTaskComplete(json);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                    json = new JSONObject(result);
+                } catch (JSONException e1) {
+                    json = new JSONObject();
+
+                    try {
+                        JSONArray jsonArray = new JSONArray(result);
+                        json.put("value", jsonArray);
+                    } catch (JSONException e2) {
+                        e1.printStackTrace();
+                        e2.printStackTrace();
+                    }
+
                 }
+                mListener.onAsyncTaskComplete(json);
             }
 
         };
@@ -121,10 +133,10 @@ public class APIRequester extends Activity {
                 List<FPlayer> list = new ArrayList<>();
                 try {
                     JSONArray playersJson = json.getJSONArray("players");
-
                     for (int i = 0; i < playersJson.length(); i++) {
                         JSONObject obj = playersJson.getJSONObject(i);
-                        list.add(gson.fromJson(obj.toString(), FPlayer.class));
+                        FPlayer player = gson.fromJson(obj.toString(), FPlayer.class);
+                        list.add(player);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -141,10 +153,21 @@ public class APIRequester extends Activity {
                 Gson gson = new Gson();
                 ArrayList<FTeam> list = new ArrayList<>();
                 try {
-                    JSONArray teamsJson = json.getJSONArray("teams");
+                    JSONArray teamsJson = json.getJSONArray("value");
                     for (int i = 0; i < teamsJson.length(); i++) {
                         JSONObject obj = teamsJson.getJSONObject(i);
-                        list.add(gson.fromJson(obj.toString(), FTeam.class));
+                        JSONArray players = obj.getJSONArray("players");
+//                        JSONArray games = obj.getJSONArray("games");
+                        String id = obj.getString("uuid");
+                        String name = obj.getString("name");
+
+                        JSONObject player1Json = players.getJSONObject(0);
+                        JSONObject player2Json = players.getJSONObject(1);
+
+                        FPlayer player1 = gson.fromJson(player1Json.toString(), FPlayer.class);
+                        FPlayer player2 = gson.fromJson(player2Json.toString(), FPlayer.class);
+
+                        list.add(new FTeam(id, name, player1, player2));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

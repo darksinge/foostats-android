@@ -97,7 +97,14 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public SQLiteDatabase getDatabase() {
-        return mDatabase != null ? mDatabase : DBHelper.getInstance(context).getWritableDatabase();
+        if (mDatabase != null) {
+            if (mDatabase.isOpen())
+                mDatabase.close();
+            mDatabase = getWritableDatabase();
+        } else {
+            mDatabase = DBHelper.getInstance(context).getWritableDatabase();
+        }
+        return mDatabase;
     }
 
     public static synchronized DBHelper getInstance(@NonNull Context context) {
@@ -215,20 +222,17 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public int insert(User user) {
-        SQLiteDatabase db = getDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + USER_TABLE_NAME + " WHERE " + USER_COLUMN_ID + " = " + user.getFacebookId(), null);
-
-        if (cursor.getCount() > 0) {
-            cursor.close();
+        if (findUserById(user.getId()) != null) {
             return update(user);
         }
+        
+        SQLiteDatabase db = getDatabase();
 
         ContentValues contentValues = new ContentValues();
         contentValues.put(USER_COLUMN_ID, user.getFacebookId());
         contentValues.put(USER_COLUMN_ACCESS_TOKEN, user.getAccessToken());
         contentValues.put(USER_COLUMN_EMAIL, user.getEmail());
         contentValues.put(USER_COLUMN_NAME, user.getName());
-        cursor.close();
         return (int) db.insert(USER_TABLE_NAME, null, contentValues);
     }
 
@@ -314,7 +318,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public FTeam findTeamById(String id) {
         SQLiteDatabase db = getDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TEAM_TABLE_NAME + " WHERE " + TEAM_COLUMN_ID + "=" + id, null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TEAM_TABLE_NAME + " WHERE " + TEAM_COLUMN_ID + "=\"" + id +"\"", null);
         ArrayList<FTeam> list = parseTeamResponse(cursor);
         if (list.size() > 0) {
             return list.get(0);
@@ -324,20 +328,17 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public int insert(FTeam team) {
-        SQLiteDatabase db = getDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TEAM_TABLE_NAME + " WHERE " + TEAM_COLUMN_ID + "=" + team.getId(), null);
-
-        if (cursor.getCount() > 0) {
-            cursor.close();
+        if (findTeamById(team.getId()) != null) {
             return update(team);
         }
+
+        SQLiteDatabase db = getDatabase();
 
         ContentValues values = new ContentValues();
         values.put(TEAM_COLUMN_ID, team.getId());
         values.put(TEAM_COLUMN_NAME, team.getTeamName());
         values.put(TEAM_COLUMN_PLAYER1, team.getPlayerOne().getId());
         values.put(TEAM_COLUMN_PLAYER2, team.getPlayerTwo().getId());
-        cursor.close();
         return (int) db.insert(TEAM_TABLE_NAME, null, values);
     }
 
@@ -381,13 +382,12 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public int insert(FPlayer player) {
-        SQLiteDatabase db = getDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_ID + " = \"" + player.getId() + "\";", null );
 
-        if (cursor.getCount() > 0) {
-            cursor.close();
+        if (findPlayerById(player.getId()) != null) {
             return update(player);
         }
+
+        SQLiteDatabase db = getDatabase();
 
         ContentValues values = new ContentValues();
         values.put(PLAYER_COLUMN_EMAIL, player.getEmail());
@@ -397,18 +397,26 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(PLAYER_COLUMN_ROLE, player.getRole());
         values.put(PLAYER_COLUMN_USERNAME, player.getUsername());
         values.put(PLAYER_COLUMN_TEAMS, FPlayer.serializeTeams(player));
-        cursor.close();
+
+        int dbCode;
         try {
-            return (int) db.insert(PLAYER_TABLE_NAME, null, values);
+            dbCode = (int) db.insertOrThrow(PLAYER_TABLE_NAME, null, values);
         }catch (SQLiteConstraintException e) {
-            Log.d(TAG, e.getMessage());
-            return -1;
+            Log.d(TAG, e.getLocalizedMessage());
+            dbCode = -1;
+        } catch (RuntimeException e) {
+            Log.d(TAG, e.getLocalizedMessage());
+            dbCode = -1;
+        } catch (Exception e) {
+            Log.d(TAG, e.getLocalizedMessage());
+            dbCode = -1;
         }
+        return dbCode;
     }
 
     public FPlayer findPlayerById(String id) {
         SQLiteDatabase db = getDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_ID + "=" + id, null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_ID + "=\"" + id + "\"", null);
         ArrayList<FPlayer> list = parsePlayerResponse(cursor);
         if (list.size() > 0) {
             return list.get(0);
@@ -419,7 +427,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public FPlayer findPlayerByEmail(String email) {
         SQLiteDatabase db = getDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_EMAIL + "=" + email, null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_EMAIL + "=\"" + email + "\"", null);
         ArrayList<FPlayer> list = parsePlayerResponse(cursor);
         if (list.size() > 0) {
             return list.get(0);
@@ -430,7 +438,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public FPlayer findPlayerByFacebookId(String id) {
         SQLiteDatabase db = getDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_FB_ID + "=" + id, null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + PLAYER_TABLE_NAME + " WHERE " + PLAYER_COLUMN_FB_ID + "=\"" + id + "\"", null);
         ArrayList<FPlayer> list = parsePlayerResponse(cursor);
         if (list.size() > 0) {
             return list.get(0);
@@ -449,6 +457,7 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getDatabase();
         ContentValues values = new ContentValues();
         values.put(PLAYER_COLUMN_EMAIL, player.getEmail());
+        values.put(PLAYER_COLUMN_FB_ID, player.getFacebookId());
         values.put(PLAYER_COLUMN_FIRSTNAME, player.getFirstName());
         values.put(PLAYER_COLUMN_LASTNAME, player.getLastName());
         values.put(PLAYER_COLUMN_ROLE, player.getRole());
@@ -506,7 +515,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public FGame findGameById(String id) {
         SQLiteDatabase db = getDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + GAME_TABLE_NAME + " WHERE " + GAME_COLUMN_ID + "=" + id, null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + GAME_TABLE_NAME + " WHERE " + GAME_COLUMN_ID + "=\"" + id + "\"", null);
         ArrayList<FGame> list = parseGameResponse(cursor);
         if (list.size() > 0) {
             return list.get(0);
@@ -522,13 +531,11 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public int insert(FGame game) {
-        SQLiteDatabase db = getDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + GAME_TABLE_NAME + " WHERE " + GAME_COLUMN_ID + "=" + game.getId(), null);
-
-        if (cursor.getCount() > 0) {
-            cursor.close();
-            return update(game);
+        if (findGameById(game.getId()) != null) {
+            update(game);
         }
+
+        SQLiteDatabase db = getDatabase();
 
         ContentValues values = new ContentValues();
         values.put(GAME_COLUMN_ID, game.getId());
@@ -542,7 +549,6 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put(GAME_COLUMN_RED_P1_SCORE, game.getRedPlayerOneScore());
         values.put(GAME_COLUMN_RED_P2_SCORE, game.getRedPlayerTwoScore());
         values.put(GAME_COLUMN_WINNING_TEAM_ID, game.getWinningTeamId());
-        cursor.close();
         return (int) db.insert(GAME_TABLE_NAME, null, values);
     }
 
