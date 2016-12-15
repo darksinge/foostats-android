@@ -42,6 +42,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void startNewGame() {
+//        Intent intent = new Intent(this, Game)
+    }
+
     public void onTestButtonClick(View view) {
         // do stuff...
     }

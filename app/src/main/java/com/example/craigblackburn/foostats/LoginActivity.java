@@ -109,8 +109,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        attemptLogin();
-
     }
 
     public synchronized void attemptLogin() {
