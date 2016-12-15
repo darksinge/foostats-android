@@ -50,6 +50,13 @@ public class PlayerRecyclerViewAdapter extends RecyclerView.Adapter<PlayerRecycl
                 if (null != mListener) {
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
+                    if (holder.mPlayer == null) {
+                        try {
+                            holder.mPlayer = FPlayer.find().get(0);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                     mListener.onListFragmentInteraction(holder.mPlayer, selector, holder.mCheckboxView.isChecked());
                 }
             }
