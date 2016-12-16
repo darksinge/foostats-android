@@ -3,6 +3,7 @@
     <string name="facebook_app_id">508439542698798</string>
     <string name="fb_login_protocol_scheme">fb512945185581567</string>
     <string name="title_activity_login">Sign in</string>
+    <integer name="DB_VERSION">1</integer>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>

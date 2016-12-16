@@ -1,7 +1,9 @@
 package com.example.craigblackburn.foostats;
 
+import android.app.Application;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteConstraintException;
@@ -33,7 +35,6 @@ public class DBHelper extends SQLiteOpenHelper {
     private SQLiteDatabase mDatabase;
 
     private final static String DATABASE_NAME = "foostats";
-    private final static int DB_VERSION = 1;
 
     private final static String USER_TABLE_NAME = "users";
     private final static String USER_COLUMN_ID = "facebook_id";
@@ -90,7 +91,7 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     private DBHelper(Context context) {
-        super(context, DATABASE_NAME, null, DB_VERSION);
+        super(context, DATABASE_NAME, null, context.getResources().getInteger(R.integer.DB_VERSION));
     }
 
     public void openDatabase() {
@@ -189,11 +190,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (!db.isOpen()) {
-            db = getWritableDatabase();
-        }
 
-        // set oldVersion to -1 to prevent user table from being overwritten on server data pull.
+        // To prevent the user table from being overwritten during a server pull, set [oldVersion] equal to -1
         if (oldVersion > 0) {
             db.execSQL("DROP TABLE IF EXISTS " + USER_TABLE_NAME);
         }
