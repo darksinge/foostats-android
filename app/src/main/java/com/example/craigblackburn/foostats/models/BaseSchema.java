@@ -107,6 +107,11 @@ public class BaseSchema {
         }
     }
 
+    /**
+     *
+     * @description :: Player Team Join Table declaration
+     *
+     * */
     public final static class TeamSchema extends BaseSchema {
 
         private TeamSchema() {}
@@ -118,10 +123,8 @@ public class BaseSchema {
         public final static String COLUMN_GAMES = "games";
 
         public static final String SQL_CREATE_TABLE_STATEMENT = CREATE_TABLE + TABLE_NAME + OPEN
-                + COLUMN_ID + TEXT + COMMA
-                + COLUMN_NAME + TEXT + UNIQUE + REQUIRED + COMMA
-                + foreignKeyBuilder(COLUMN_PLAYERS, PlayerTeamSchema.TABLE_NAME, PlayerTeamSchema.COLUMN_TEAM_ID, true, false) + COMMA
-                + foreignKeyBuilder(COLUMN_GAMES, )
+                + COLUMN_ID + TEXT + REQUIRED + UNIQUE + COMMA
+                + COLUMN_NAME + TEXT + UNIQUE + REQUIRED + COMMA + END;
 
         public final static String sqlGetTeamsStatement(@NonNull FPlayer player) {
             String searchTable = TeamSchema.TABLE_NAME;
@@ -136,37 +139,57 @@ public class BaseSchema {
     }
 
 
+    /**
+     *
+     * @description :: Player Team Join Table declaration
+     *
+     * */
     public final class PlayerTeamSchema extends BaseSchema {
-        public final static String TABLE_NAME = "player_team";
+        public final static String TABLE_NAME = "player_has_teams__team_has_players";
         public final static String COLUMN_TEAM_ID = "team_uuid";
         public final static String COLUMN_PLAYER_ID = "player_uuid";
 
         public final static String SQL_CREATE_TABLE_STATEMENT = CREATE_TABLE + TABLE_NAME + OPEN
-                + COLUMN_TEAM_ID + TEXT + COMMA
-                + COLUMN_PLAYER_ID + TEXT + COMMA
+                + COLUMN_TEAM_ID + TEXT + REQUIRED + COMMA
+                + COLUMN_PLAYER_ID + TEXT + REQUIRED + COMMA
                 + PRIMARY_KEY + OPEN + TeamSchema.COLUMN_ID + COMMA + PlayerSchema.COLUMN_ID + CLOSE
                 + CLOSE + END;
 
     }
 
     public static final class TeamGameSchema extends BaseSchema {
+        public final static String TABLE_NAME = "team_has_games__game_has_teams";
+        public final static String GAME_COLUMN = "game";
+        public final static String TEAM_COLUMN = "team";
+        public final static String IS_BLUE_COLUMN = "is_blue";
+        public final static String PLAYER_ONE_SCORE_COLUMN = "player_one_score";
+        public final static String PLAYER_TWO_SCORE_COLUMN = "player_two_score";
 
-        private TeamGameSchema() {}
+        public final static String SQL_CREATE_TABLE_STATEMENT = CREATE_TABLE + TABLE_NAME + OPEN
+                + GAME_COLUMN +
+
+    }
+
+    public static final class GameSchema extends BaseSchema {
+
+        private GameSchema() {}
 
         public final static String TABLE_NAME = "games";
-        public final static String COLUMN_ID = "uuid";
-        public final static String COLUMN_BLUE_TEAM = "blue_team";
-        public final static String COLUMN_RED_TEAM = "red_team";
-        public final static String COLUMN_PLAYER1_SCORE = "blue_player1_score";
-        public final static String COLUMN_PLAYER2_SCORE = "blue_player2_score";
-        public final static String COLUMN_PLAYER3_SCORE = "red_player1_score";
-        public final static String COLUMN_PLAYER4_SCORE = "red_player2_score";
-        public final static String COLUMN_GAME_LENGTH_IN_SECONDS = "game_length_in_seconds";
-        public final static String COLUMN_GAME_DATE = "createdAt";
-        public final static String COLUMN_GAME_MATCH_TOKEN = "match_token";
-        public final static String COLUMNG_GAME_MATCH_ORDER = "match_order";
+        public final static String ID_COLUMN_COLUMN = "uuid";
+        public final static String BLUE_TEAM_COLUMN = "blue_team";
+        public final static String RED_TEAM_COLUMN = "red_team";
+        public final static String PLAYER1_SCORE_COLUMN = "blue_player1_score";
+        public final static String PLAYER2_SCORE_COLUMN = "blue_player2_score";
+        public final static String PLAYER3_SCORE_COLUMN = "red_player1_score";
+        public final static String PLAYER4_SCORE_COLUMN = "red_player2_score";
+        public final static String GAME_LENGTH_IN_SECONDS_COLUMN = "game_length_in_seconds";
+        public final static String GAME_DATE_COLUMN = "createdAt";
+        public final static String GAME_MATCH_TOKEN_COLUMN = "match_token";
+        public final static String GAME_MATCH_ORDER_COLUMN = "match_order";
 
-        public final static
+        public final static String SQL_CREATE_TABLE_STATEMENT = CREATE_TABLE + TABLE_NAME + OPEN
+                + ID_COLUMN_COLUMN + PRIMARY_KEY + UNIQUE + REQUIRED
+                + BLUE_TEAM_COLUMN +
 
     }
 
