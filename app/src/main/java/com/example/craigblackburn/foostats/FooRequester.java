@@ -46,6 +46,7 @@ public class FooRequester extends AsyncTask<String, Void, String> {
 
                 List<FPlayer> list = new ArrayList<>();
                 try {
+                    JSONObject json = new JSONObject(response);
                     JSONArray playersJson = json.getJSONArray("players");
                     for (int i = 0; i < playersJson.length(); i++) {
                         JSONObject obj = playersJson.getJSONObject(i);
