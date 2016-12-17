@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.example.craigblackburn.foostats.models.BaseSchema;
 import com.facebook.AccessToken;
 
 import org.json.JSONArray;
@@ -74,7 +75,7 @@ public class FooRequester extends AsyncTask<String, Void, String> {
                                 if (_existingTeam != null) {
                                     _existingTeam.addPlayer(player);
                                 }
-                            } catch (Exception e) {
+                            } catch (Exception e2) {
                                 // ignore
                             }
 
