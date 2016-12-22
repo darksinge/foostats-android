@@ -1,7 +1,13 @@
 package com.example.craigblackburn.foostats;
 
+import android.os.CountDownTimer;
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
 
 
 public class FGame extends FModel {
@@ -10,20 +16,32 @@ public class FGame extends FModel {
         void onTaskComplete(ArrayList<FGame> list);
     }
 
+    public static String TAG = "F_GAME";
+
     public static int BLUE_PLAYER_ONE = 0;
     public static int BLUE_PLAYER_TWO = 1;
     public static int RED_PLAYER_ONE = 2;
     public static int RED_PLAYER_TWO = 3;
     public static String TIE_GAME_FLAG = "tie_game";
 
+    private Timer gameTimer;
     private String uuid;
     private FTeam blueTeam, redTeam;
     private FPlayer bluePlayer1, bluePlayer2, redPlayer1, redPlayer2;
     private int blueTeamPlayer1Score, blueTeamPlayer2Score, redTeamPlayer1Score, redTeamPlayer2Score;
+    private int gameLengthInSeconds;
+    private UUID matchToken;
+    private int matchOrder;
 
-    public FGame(){}
+    public FGame(){
+        gameLengthInSeconds = 0;
+        matchToken = UUID.randomUUID();
+        matchOrder = 0;
+        gameTimer = new Timer();
+    }
 
     public FGame(FTeam blueTeam, FTeam redTeam) {
+        this();
         this.uuid = generateUuid();
         this.blueTeam = blueTeam;
         this.redTeam = redTeam;
@@ -38,6 +56,7 @@ public class FGame extends FModel {
     }
 
     public FGame(String id, FTeam blueTeam, FTeam redTeam) {
+        this();
         this.uuid = id;
         this.blueTeam = blueTeam;
         this.redTeam = redTeam;
@@ -89,6 +108,31 @@ public class FGame extends FModel {
 
     public Integer getRedPlayerTwoScore() {
         return this.redTeamPlayer2Score;
+    }
+
+    public String getMatchToken() {
+        return this.matchToken.toString();
+    }
+
+    public int getMatchOrder() {
+        return this.matchOrder;
+    }
+
+    public int getMatchLength() {
+        return this.gameLengthInSeconds;
+    }
+
+    public void startTimer() {
+        gameTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                Log.d(TAG, "seconds passed: " + String.valueOf(++gameLengthInSeconds));
+            }
+        }, 0, 1000);
+    }
+
+    public void stopTimer() {
+        gameTimer.cancel();
     }
 
     public FTeam getWinningTeam() {

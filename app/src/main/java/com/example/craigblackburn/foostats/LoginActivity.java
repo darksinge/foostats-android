@@ -123,6 +123,9 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        FGame game = new FGame();
+//        game.startTimer();
+
         attemptLogin();
     }
 
